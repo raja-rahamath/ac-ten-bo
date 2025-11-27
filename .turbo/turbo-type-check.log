@@ -1,0 +1,4 @@
+
+> backoffice@0.1.0 type-check /Users/raja/work/agentcare/agentcare-web/apps/backoffice
+> tsc --noEmit
+
