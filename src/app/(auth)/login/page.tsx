@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@agentcare/ui';
+import { Button } from '@/components/ui';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,9 +31,10 @@ export default function LoginPage() {
         throw new Error(data.error?.message || 'Login failed');
       }
 
-      // Check if user has admin or employee role
-      const allowedRoles = ['SUPER_ADMIN', 'ADMIN', 'EMPLOYEE', 'MANAGER'];
-      if (!allowedRoles.includes(data.data.user.role?.name)) {
+      // Check if user has admin or employee role (case-insensitive)
+      const allowedRoles = ['super_admin', 'admin', 'employee', 'manager', 'technician', 'receptionist'];
+      const userRole = data.data.user.role?.toLowerCase() || '';
+      if (!allowedRoles.includes(userRole)) {
         throw new Error('Access denied. Admin privileges required.');
       }
 

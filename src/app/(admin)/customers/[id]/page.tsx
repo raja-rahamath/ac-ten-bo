@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@agentcare/ui';
+import { Button } from '@/components/ui';
 
 interface Customer {
   id: string;

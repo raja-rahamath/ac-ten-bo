@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@agentcare/ui';
+import { Button } from '@/components/ui';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general');

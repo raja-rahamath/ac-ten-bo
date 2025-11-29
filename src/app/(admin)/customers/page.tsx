@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@agentcare/ui';
+import { Button } from '@/components/ui';
 
 interface Customer {
   id: string;

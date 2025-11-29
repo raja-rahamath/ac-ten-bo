@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@agentcare/ui';
+import { Button } from '@/components/ui';
 
 export default function NewCustomerPage() {
   const router = useRouter();

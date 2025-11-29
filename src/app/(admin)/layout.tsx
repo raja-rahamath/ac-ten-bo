@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import AIChatWidget from '@/components/AIChatWidget';
 
 export default function AdminLayout({
   children,
@@ -107,6 +108,9 @@ export default function AdminLayout({
       <main className={`flex-1 p-8 transition-all ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
         {children}
       </main>
+
+      {/* AI Chat Widget */}
+      <AIChatWidget context={{ currentPage: pathname }} />
     </div>
   );
 }

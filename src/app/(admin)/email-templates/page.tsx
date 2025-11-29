@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@agentcare/ui';
+import { Button } from '@/components/ui';
 
 interface EmailTemplate {
   id: string;

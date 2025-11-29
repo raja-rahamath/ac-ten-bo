@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@agentcare/ui';
+import { Button } from '@/components/ui';
 
 interface Employee {
   id: string;
@@ -10,11 +10,11 @@ interface Employee {
   lastName: string;
   email: string;
   phone?: string;
-  status: string;
+  isActive: boolean;
   employeeNo: string;
   createdAt: string;
   department?: { name: string };
-  designation?: { name: string };
+  jobTitle?: { name: string };
 }
 
 export default function EmployeesPage() {
@@ -59,14 +59,8 @@ export default function EmployeesPage() {
     );
   });
 
-  function getStatusColor(status: string) {
-    const colors: Record<string, string> = {
-      ACTIVE: 'bg-green-100 text-green-800',
-      INACTIVE: 'bg-gray-100 text-gray-800',
-      ON_LEAVE: 'bg-yellow-100 text-yellow-800',
-      TERMINATED: 'bg-red-100 text-red-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+  function getStatusColor(isActive: boolean) {
+    return isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
   }
 
   return (
@@ -106,7 +100,7 @@ export default function EmployeesPage() {
                     <th className="px-6 py-4 font-medium">Email</th>
                     <th className="px-6 py-4 font-medium">Phone</th>
                     <th className="px-6 py-4 font-medium">Department</th>
-                    <th className="px-6 py-4 font-medium">Designation</th>
+                    <th className="px-6 py-4 font-medium">Job Title</th>
                     <th className="px-6 py-4 font-medium">Status</th>
                     <th className="px-6 py-4 font-medium">Actions</th>
                   </tr>
@@ -125,10 +119,10 @@ export default function EmployeesPage() {
                       <td className="px-6 py-4">{employee.email}</td>
                       <td className="px-6 py-4">{employee.phone || '-'}</td>
                       <td className="px-6 py-4">{employee.department?.name || '-'}</td>
-                      <td className="px-6 py-4">{employee.designation?.name || '-'}</td>
+                      <td className="px-6 py-4">{employee.jobTitle?.name || '-'}</td>
                       <td className="px-6 py-4">
-                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(employee.status)}`}>
-                          {employee.status.replace('_', ' ')}
+                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(employee.isActive)}`}>
+                          {employee.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="px-6 py-4">

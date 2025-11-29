@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@agentcare/ui';
+import { Button } from '@/components/ui';
 
 interface Customer {
   id: string;
