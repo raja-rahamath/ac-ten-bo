@@ -153,5 +153,8 @@ class ApiClient {
 export const api = new ApiClient(API_URL);
 export const aiApi = new ApiClient(AI_URL);
 
+// Alias for backward compatibility
+export const apiService = api;
+
 // Export the base URLs for reference
 export { API_URL, AI_URL };
