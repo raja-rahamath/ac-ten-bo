@@ -148,6 +148,7 @@ export default function AdminLayout({
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isColorThemeOpen, setIsColorThemeOpen] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'sales', 'hr']);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -285,9 +286,64 @@ export default function AdminLayout({
     amc: Icons.amc,
     quotes: Icons.quotes,
     receipts: Icons.receipts,
+    collections: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    ),
   };
 
-  // Default nav items (fallback if no menu items from API)
+  // Grouped navigation structure
+  const navGroups = [
+    { href: '/dashboard', label: 'Dashboard', icon: Icons.dashboard },
+    {
+      id: 'operations',
+      label: 'Operations',
+      labelAr: 'العمليات',
+      icon: Icons.requests,
+      children: [
+        { href: '/requests', label: 'Service Requests', icon: Icons.requests },
+        { href: '/amc', label: 'AMC Contracts', icon: Icons.amc },
+      ],
+    },
+    { href: '/customers', label: 'Customers', icon: Icons.customers },
+    { href: '/properties', label: 'Properties', icon: Icons.properties },
+    {
+      id: 'sales',
+      label: 'Sales & Billing',
+      labelAr: 'المبيعات والفواتير',
+      icon: Icons.invoices,
+      children: [
+        { href: '/quotes', label: 'Quotes', icon: Icons.quotes },
+        { href: '/invoices', label: 'Invoices', icon: Icons.invoices },
+        { href: '/collections', label: 'Collections', icon: iconMap.collections },
+        { href: '/receipts', label: 'Receipts', icon: Icons.receipts },
+      ],
+    },
+    {
+      id: 'hr',
+      label: 'HR',
+      labelAr: 'الموارد البشرية',
+      icon: Icons.employees,
+      children: [
+        { href: '/employees', label: 'Employees', icon: Icons.employees },
+        { href: '/leaves', label: 'Leave Management', icon: iconMap.calendar },
+      ],
+    },
+    { href: '/reports', label: 'Reports', icon: Icons.reports },
+    { href: '/settings', label: 'Settings', icon: Icons.settings },
+  ];
+
+  // Toggle group expansion
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev =>
+      prev.includes(groupId)
+        ? prev.filter(id => id !== groupId)
+        : [...prev, groupId]
+    );
+  };
+
+  // Flatten for legacy compatibility - only used if API returns flat menu items
   const defaultNavItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Icons.dashboard },
     { href: '/requests', label: 'Service Requests', icon: Icons.requests },
@@ -299,7 +355,6 @@ export default function AdminLayout({
     { href: '/invoices', label: 'Invoices', icon: Icons.invoices },
     { href: '/quotes', label: 'Quotes', icon: Icons.quotes },
     { href: '/receipts', label: 'Receipts', icon: Icons.receipts },
-    { href: '/email-templates', label: 'Email Templates', icon: Icons.email },
     { href: '/reports', label: 'Reports', icon: Icons.reports },
     { href: '/settings', label: 'Settings', icon: Icons.settings },
   ];
@@ -370,24 +425,79 @@ export default function AdminLayout({
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto py-6 px-3">
             <ul className="space-y-1">
-              {navItems.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={`sidebar-link ${isActive(item.href) ? 'active' : ''}`}
-                    title={!isSidebarOpen ? item.label : undefined}
-                    onClick={() => setIsMobileSidebarOpen(false)}
-                  >
-                    <span className={isActive(item.href) ? 'text-primary-400' : ''}>
-                      {item.icon}
-                    </span>
-                    {isSidebarOpen && (
-                      <span className="font-medium">{item.label}</span>
-                    )}
-                    {isActive(item.href) && isSidebarOpen && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-400" />
-                    )}
-                  </Link>
+              {navGroups.map((item: any) => (
+                <li key={item.href || item.id}>
+                  {item.children ? (
+                    // Group with children
+                    <div>
+                      <button
+                        onClick={() => toggleGroup(item.id)}
+                        className={`sidebar-link w-full ${
+                          item.children.some((c: any) => isActive(c.href)) ? 'text-primary-400' : ''
+                        }`}
+                        title={!isSidebarOpen ? item.label : undefined}
+                      >
+                        <span>{item.icon}</span>
+                        {isSidebarOpen && (
+                          <>
+                            <span className="font-medium flex-1 text-left">
+                              {language === 'ar' && item.labelAr ? item.labelAr : item.label}
+                            </span>
+                            <svg
+                              className={`w-4 h-4 transition-transform ${
+                                expandedGroups.includes(item.id) ? 'rotate-180' : ''
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </>
+                        )}
+                      </button>
+                      {/* Children */}
+                      {isSidebarOpen && expandedGroups.includes(item.id) && (
+                        <ul className="mt-1 ml-4 space-y-1 border-l border-dark-700 pl-3">
+                          {item.children.map((child: any) => (
+                            <li key={child.href}>
+                              <Link
+                                href={child.href}
+                                className={`sidebar-link text-sm ${isActive(child.href) ? 'active' : ''}`}
+                                onClick={() => setIsMobileSidebarOpen(false)}
+                              >
+                                <span className={`w-4 h-4 ${isActive(child.href) ? 'text-primary-400' : ''}`}>
+                                  {child.icon}
+                                </span>
+                                <span className="font-medium">{child.label}</span>
+                                {isActive(child.href) && (
+                                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-400" />
+                                )}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ) : (
+                    // Simple link
+                    <Link
+                      href={item.href}
+                      className={`sidebar-link ${isActive(item.href) ? 'active' : ''}`}
+                      title={!isSidebarOpen ? item.label : undefined}
+                      onClick={() => setIsMobileSidebarOpen(false)}
+                    >
+                      <span className={isActive(item.href) ? 'text-primary-400' : ''}>
+                        {item.icon}
+                      </span>
+                      {isSidebarOpen && (
+                        <span className="font-medium">{item.label}</span>
+                      )}
+                      {isActive(item.href) && isSidebarOpen && (
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-400" />
+                      )}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

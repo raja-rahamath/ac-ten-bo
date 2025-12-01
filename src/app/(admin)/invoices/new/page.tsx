@@ -8,12 +8,14 @@ interface Customer {
   id: string;
   firstName: string;
   lastName: string;
+  orgName?: string;
 }
 
 interface ServiceRequest {
   id: string;
   requestNo: string;
   title: string;
+  customerId: string;
 }
 
 interface InvoiceItem {
@@ -29,6 +31,8 @@ export default function NewInvoicePage() {
   const [error, setError] = useState('');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(searchParams.get('customerId') || '');
+  const [selectedServiceRequestId, setSelectedServiceRequestId] = useState(searchParams.get('serviceRequestId') || '');
   const [items, setItems] = useState<InvoiceItem[]>([
     { description: '', quantity: 1, unitPrice: 0 },
   ]);
@@ -36,6 +40,16 @@ export default function NewInvoicePage() {
   useEffect(() => {
     fetchDropdownData();
   }, []);
+
+  // Auto-select customer when service request is selected
+  useEffect(() => {
+    if (selectedServiceRequestId) {
+      const sr = serviceRequests.find(r => r.id === selectedServiceRequestId);
+      if (sr && sr.customerId) {
+        setSelectedCustomerId(sr.customerId);
+      }
+    }
+  }, [selectedServiceRequestId, serviceRequests]);
 
   async function fetchDropdownData() {
     const token = localStorage.getItem('accessToken');
@@ -77,8 +91,16 @@ export default function NewInvoicePage() {
     setItems(newItems);
   }
 
-  function calculateTotal() {
+  function calculateSubtotal() {
     return items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  }
+
+  function calculateTax() {
+    return calculateSubtotal() * 0.05; // 5% VAT
+  }
+
+  function calculateTotal() {
+    return calculateSubtotal() + calculateTax();
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -87,7 +109,22 @@ export default function NewInvoicePage() {
     setError('');
 
     const formData = new FormData(e.currentTarget);
-    const validItems = items.filter((item) => item.description && item.unitPrice > 0);
+    const validItems = items
+      .filter((item) => item.description && item.unitPrice > 0)
+      .map((item) => ({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.quantity * item.unitPrice,
+      }));
+
+    if (validItems.length === 0) {
+      setError('Please add at least one invoice item');
+      setIsLoading(false);
+      return;
+    }
+
+    const dueDate = formData.get('dueDate') as string;
 
     try {
       const token = localStorage.getItem('accessToken');
@@ -98,13 +135,11 @@ export default function NewInvoicePage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          customerId: formData.get('customerId'),
-          serviceRequestId: formData.get('serviceRequestId') || undefined,
-          dueDate: formData.get('dueDate') || undefined,
+          customerId: selectedCustomerId,
+          serviceRequestId: selectedServiceRequestId || undefined,
+          dueDate: dueDate ? new Date(dueDate).toISOString() : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           notes: formData.get('notes') || undefined,
-          items: validItems.length > 0 ? validItems : undefined,
-          totalAmount: calculateTotal(),
-          status: 'DRAFT',
+          items: validItems,
         }),
       });
 
@@ -123,9 +158,9 @@ export default function NewInvoicePage() {
   }
 
   function formatCurrency(amount: number) {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-BH', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'BHD',
     }).format(amount);
   }
 
@@ -146,6 +181,27 @@ export default function NewInvoicePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
+              <label htmlFor="serviceRequestId" className="mb-2 block font-medium">
+                Service Request *
+              </label>
+              <select
+                id="serviceRequestId"
+                name="serviceRequestId"
+                required
+                value={selectedServiceRequestId}
+                onChange={(e) => setSelectedServiceRequestId(e.target.value)}
+                className="w-full rounded-lg border p-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="">Select a service request</option>
+                {serviceRequests.map((request) => (
+                  <option key={request.id} value={request.id}>
+                    {request.requestNo} - {request.title}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-sm text-gray-500">Only completed service requests are shown</p>
+            </div>
+            <div>
               <label htmlFor="customerId" className="mb-2 block font-medium">
                 Customer *
               </label>
@@ -153,30 +209,14 @@ export default function NewInvoicePage() {
                 id="customerId"
                 name="customerId"
                 required
-                defaultValue={searchParams.get('customerId') || ''}
+                value={selectedCustomerId}
+                onChange={(e) => setSelectedCustomerId(e.target.value)}
                 className="w-full rounded-lg border p-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="">Select a customer</option>
                 {customers.map((customer) => (
                   <option key={customer.id} value={customer.id}>
-                    {customer.firstName} {customer.lastName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="serviceRequestId" className="mb-2 block font-medium">
-                Related Service Request
-              </label>
-              <select
-                id="serviceRequestId"
-                name="serviceRequestId"
-                className="w-full rounded-lg border p-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                <option value="">None</option>
-                {serviceRequests.map((request) => (
-                  <option key={request.id} value={request.id}>
-                    {request.requestNo} - {request.title}
+                    {customer.orgName || `${customer.firstName} ${customer.lastName}`}
                   </option>
                 ))}
               </select>
@@ -191,6 +231,7 @@ export default function NewInvoicePage() {
               id="dueDate"
               name="dueDate"
               type="date"
+              defaultValue={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
               className="w-full max-w-xs rounded-lg border p-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
@@ -198,7 +239,7 @@ export default function NewInvoicePage() {
           {/* Invoice Items */}
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <label className="font-medium">Invoice Items</label>
+              <label className="font-medium">Invoice Items *</label>
               <Button type="button" variant="outline" size="sm" onClick={addItem}>
                 + Add Item
               </Button>
@@ -213,6 +254,7 @@ export default function NewInvoicePage() {
                       value={item.description}
                       onChange={(e) => updateItem(index, 'description', e.target.value)}
                       className="w-full rounded-lg border p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                      required
                     />
                   </div>
                   <div className="w-20">
@@ -230,7 +272,7 @@ export default function NewInvoicePage() {
                       type="number"
                       placeholder="Unit Price"
                       min="0"
-                      step="0.01"
+                      step="0.001"
                       value={item.unitPrice}
                       onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
                       className="w-full rounded-lg border p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -251,11 +293,23 @@ export default function NewInvoicePage() {
               ))}
             </div>
 
-            {/* Total */}
-            <div className="mt-4 flex justify-end border-t pt-4">
-              <div className="text-right">
-                <p className="text-gray-500">Total</p>
-                <p className="text-2xl font-bold">{formatCurrency(calculateTotal())}</p>
+            {/* Totals */}
+            <div className="mt-4 space-y-2 border-t pt-4">
+              <div className="flex justify-end">
+                <div className="w-64 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Subtotal</span>
+                    <span>{formatCurrency(calculateSubtotal())}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">VAT (5%)</span>
+                    <span>{formatCurrency(calculateTax())}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2 text-lg font-bold">
+                    <span>Total</span>
+                    <span>{formatCurrency(calculateTotal())}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
