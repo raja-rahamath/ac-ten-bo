@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ServiceRequest {
   id: string;
@@ -15,9 +16,11 @@ interface ServiceRequest {
   customer?: { firstName: string; lastName: string };
   complaintType?: { name: string };
   assignedEmployee?: { firstName: string; lastName: string };
+  zone?: { id: string; name: string };
 }
 
 export default function RequestsPage() {
+  const { isTechnician, userZones } = useAuth();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
@@ -26,14 +29,22 @@ export default function RequestsPage() {
 
   useEffect(() => {
     fetchRequests();
-  }, [page, filter]);
+  }, [page, filter, isTechnician, userZones]);
 
   async function fetchRequests() {
     try {
       const token = localStorage.getItem('accessToken');
       const statusParam = filter !== 'ALL' ? `&status=${filter}` : '';
+
+      // For technicians, filter by their assigned zones
+      let zoneParam = '';
+      if (isTechnician && userZones.length > 0) {
+        const zoneIds = userZones.map((z) => z.zoneId).join(',');
+        zoneParam = `&zoneIds=${zoneIds}`;
+      }
+
       const response = await fetch(
-        `http://localhost:4001/api/v1/service-requests?page=${page}&limit=20${statusParam}`,
+        `http://localhost:4001/api/v1/service-requests?page=${page}&limit=20${statusParam}${zoneParam}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();

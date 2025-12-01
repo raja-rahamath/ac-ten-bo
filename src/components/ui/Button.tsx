@@ -30,11 +30,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary: 'bg-primary text-white hover:bg-primary/90 focus:ring-primary',
-      secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500',
-      outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-primary',
-      ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
+      secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600',
+      outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-primary dark:border-gray-600 dark:bg-transparent dark:text-gray-200 dark:hover:bg-gray-700',
+      ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500 dark:text-gray-200 dark:hover:bg-gray-700',
       danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-      default: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500',
+      default: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600',
     };
 
     const sizes = {

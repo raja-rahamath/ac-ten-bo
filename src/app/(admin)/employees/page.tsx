@@ -1,8 +1,51 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
+
+const Icons = {
+  search: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  ),
+  plus: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+  ),
+  user: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  ),
+  chevronLeft: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+    </svg>
+  ),
+  chevronRight: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    </svg>
+  ),
+  download: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+  ),
+  upload: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+    </svg>
+  ),
+  template: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  ),
+};
 
 interface Employee {
   id: string;
@@ -22,7 +65,17 @@ export default function EmployeesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    success: number;
+    failed: number;
+    errors: { row: number; error: string }[];
+  } | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchEmployees();
@@ -39,12 +92,101 @@ export default function EmployeesPage() {
 
       if (data.success) {
         setEmployees(data.data);
+        setTotal(data.pagination?.total || 0);
         setTotalPages(Math.ceil((data.pagination?.total || 0) / 20));
       }
     } catch (error) {
       console.error('Failed to fetch employees:', error);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleExport() {
+    setIsExporting(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:4001/api/v1/employees/export/excel', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `employees_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export employees');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
+  async function handleDownloadTemplate() {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:4001/api/v1/employees/import/template', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'employee_import_template.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download template');
+    }
+  }
+
+  async function handleImport(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportResult(null);
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('http://localhost:4001/api/v1/employees/import/excel', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setImportResult(data.data);
+        fetchEmployees();
+      } else {
+        throw new Error(data.error?.message || 'Import failed');
+      }
+    } catch (error: any) {
+      console.error('Import failed:', error);
+      alert(error.message || 'Failed to import employees');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   }
 
@@ -59,75 +201,192 @@ export default function EmployeesPage() {
     );
   });
 
-  function getStatusColor(isActive: boolean) {
-    return isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
-  }
-
   return (
-    <div>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Employees</h1>
-        <Button asChild>
-          <Link href="/employees/new">+ Add Employee</Link>
-        </Button>
+    <div className="space-y-6">
+      {/* Hidden file input for import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx,.xls"
+        onChange={handleImport}
+        className="hidden"
+      />
+
+      {/* Import Result Modal */}
+      {importResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-dark-800 mb-4">Import Results</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50">
+                <span className="text-emerald-600 font-medium">{importResult.success}</span>
+                <span className="text-emerald-700">employees imported successfully</span>
+              </div>
+              {importResult.failed > 0 && (
+                <>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50">
+                    <span className="text-red-600 font-medium">{importResult.failed}</span>
+                    <span className="text-red-700">rows failed</span>
+                  </div>
+                  <div className="max-h-40 overflow-y-auto text-sm">
+                    {importResult.errors.map((err, i) => (
+                      <p key={i} className="text-red-600 py-1">
+                        Row {err.row}: {err.error}
+                      </p>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => setImportResult(null)}
+              className="w-full mt-4 btn-modern btn-primary"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-dark-800">Employees</h1>
+          <p className="text-dark-400 mt-1">{total} team members</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleDownloadTemplate}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dark-200 text-dark-600 hover:bg-dark-50 transition-colors text-sm font-medium"
+            title="Download import template"
+          >
+            {Icons.template}
+            Template
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dark-200 text-dark-600 hover:bg-dark-50 transition-colors text-sm font-medium disabled:opacity-50"
+          >
+            {Icons.upload}
+            {isImporting ? 'Importing...' : 'Import'}
+          </button>
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dark-200 text-dark-600 hover:bg-dark-50 transition-colors text-sm font-medium disabled:opacity-50"
+          >
+            {Icons.download}
+            {isExporting ? 'Exporting...' : 'Export'}
+          </button>
+          <Button asChild className="btn-modern btn-primary gap-2">
+            <Link href="/employees/new">
+              {Icons.plus}
+              Add Employee
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
-      <div className="mb-6">
+      <div className="relative max-w-md">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-dark-400">
+          {Icons.search}
+        </div>
         <input
           type="text"
-          placeholder="Search employees..."
+          placeholder="Search by name, email, or employee #..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md rounded-lg border p-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="input-modern !pl-11"
         />
       </div>
 
       {/* Employees Table */}
-      <div className="rounded-xl bg-white shadow-sm">
+      <div className="card-modern overflow-hidden">
         {isLoading ? (
-          <div className="py-12 text-center text-gray-500">Loading...</div>
+          <div className="flex items-center justify-center py-16">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-500"></div>
+              <span className="text-dark-400 text-sm">Loading employees...</span>
+            </div>
+          </div>
         ) : filteredEmployees.length === 0 ? (
-          <div className="py-12 text-center text-gray-500">No employees found</div>
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="h-16 w-16 rounded-2xl bg-dark-100 flex items-center justify-center text-dark-400 mb-4">
+              {Icons.user}
+            </div>
+            <p className="text-dark-500 font-medium">No employees found</p>
+            <p className="text-sm text-dark-400 mt-1">
+              {search ? 'Try adjusting your search terms' : 'Add your first team member to get started'}
+            </p>
+          </div>
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="table-modern">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-left text-sm text-gray-500">
-                    <th className="px-6 py-4 font-medium">Employee #</th>
-                    <th className="px-6 py-4 font-medium">Name</th>
-                    <th className="px-6 py-4 font-medium">Email</th>
-                    <th className="px-6 py-4 font-medium">Phone</th>
-                    <th className="px-6 py-4 font-medium">Department</th>
-                    <th className="px-6 py-4 font-medium">Job Title</th>
-                    <th className="px-6 py-4 font-medium">Status</th>
-                    <th className="px-6 py-4 font-medium">Actions</th>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Contact</th>
+                    <th>Department</th>
+                    <th>Job Title</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredEmployees.map((employee) => (
-                    <tr key={employee.id} className="border-b last:border-0 hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <Link href={`/employees/${employee.id}`} className="text-primary hover:underline">
-                          {employee.employeeNo}
-                        </Link>
+                  {filteredEmployees.map((employee, index) => (
+                    <tr
+                      key={employee.id}
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${index * 30}ms` }}
+                    >
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary-400 to-accent-purple flex items-center justify-center text-white font-medium">
+                            {employee.firstName[0]}{employee.lastName[0]}
+                          </div>
+                          <div>
+                            <Link
+                              href={`/employees/${employee.id}`}
+                              className="font-medium text-dark-800 hover:text-primary-500 transition-colors"
+                            >
+                              {employee.firstName} {employee.lastName}
+                            </Link>
+                            <p className="text-xs text-dark-400">{employee.employeeNo}</p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 font-medium">
-                        {employee.firstName} {employee.lastName}
+                      <td>
+                        <div>
+                          <p className="text-dark-700">{employee.email}</p>
+                          <p className="text-xs text-dark-400">{employee.phone || 'No phone'}</p>
+                        </div>
                       </td>
-                      <td className="px-6 py-4">{employee.email}</td>
-                      <td className="px-6 py-4">{employee.phone || '-'}</td>
-                      <td className="px-6 py-4">{employee.department?.name || '-'}</td>
-                      <td className="px-6 py-4">{employee.jobTitle?.name || '-'}</td>
-                      <td className="px-6 py-4">
-                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(employee.isActive)}`}>
+                      <td>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-dark-100 text-dark-600 text-xs font-medium">
+                          {employee.department?.name || '-'}
+                        </span>
+                      </td>
+                      <td className="text-dark-600">{employee.jobTitle?.name || '-'}</td>
+                      <td>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                          employee.isActive
+                            ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200'
+                            : 'bg-dark-100 text-dark-500 ring-1 ring-dark-200'
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${employee.isActive ? 'bg-emerald-500' : 'bg-dark-400'}`}></span>
                           {employee.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <Link href={`/employees/${employee.id}`} className="text-primary hover:underline">
+                      <td>
+                        <Link
+                          href={`/employees/${employee.id}`}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-primary-500 hover:text-primary-600 transition-colors"
+                        >
                           View
+                          {Icons.chevronRight}
                         </Link>
                       </td>
                     </tr>
@@ -137,24 +396,44 @@ export default function EmployeesPage() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t px-6 py-4">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="rounded px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <span className="text-sm text-gray-500">
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="rounded px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
-                >
-                  Next
-                </button>
+              <div className="flex items-center justify-between border-t border-dark-100 px-6 py-4">
+                <p className="text-sm text-dark-500">
+                  Showing {(page - 1) * 20 + 1} to {Math.min(page * 20, total)} of {total} employees
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="p-2 rounded-lg hover:bg-dark-100 text-dark-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {Icons.chevronLeft}
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setPage(pageNum)}
+                          className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${
+                            page === pageNum
+                              ? 'bg-primary-500 text-white'
+                              : 'hover:bg-dark-100 text-dark-600'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="p-2 rounded-lg hover:bg-dark-100 text-dark-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {Icons.chevronRight}
+                  </button>
+                </div>
               </div>
             )}
           </>

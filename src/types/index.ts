@@ -6,6 +6,7 @@ export interface User {
   lastName: string;
   phone?: string;
   avatar?: string;
+  photoUrl?: string;
   isActive: boolean;
   isVerified: boolean;
   lastLoginAt?: string;
@@ -21,6 +22,25 @@ export interface Role {
   displayName: string;
   description?: string;
   isSystem: boolean;
+}
+
+export interface MenuItem {
+  id: string;
+  key: string;
+  name: string;
+  nameAr?: string;
+  icon?: string;
+  href: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+export interface UserZone {
+  zoneId: string;
+  zoneName: string;
+  zoneNameAr?: string;
+  role: 'PRIMARY_HEAD' | 'SECONDARY_HEAD' | 'TECHNICIAN' | 'HELPER';
+  isPrimary: boolean;
 }
 
 // Employee types

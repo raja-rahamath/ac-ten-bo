@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui';
+import { api } from '@/lib/api';
+import { formatDate } from '@/lib/date';
 
 interface Customer {
   id: string;
@@ -10,7 +11,7 @@ interface Customer {
   lastName: string;
   email?: string;
   phone?: string;
-  status: string;
+  isActive: boolean;
   createdAt: string;
   properties?: { id: string; name: string }[];
 }
@@ -28,12 +29,11 @@ export default function CustomersPage() {
 
   async function fetchCustomers() {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(
-        `http://localhost:4001/api/v1/customers?page=${page}&limit=20`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const data = await response.json();
+      const data = await api.get<{
+        success: boolean;
+        data: Customer[];
+        pagination?: { total: number };
+      }>(`/customers?page=${page}&limit=20`);
 
       if (data.success) {
         setCustomers(data.data);
@@ -57,22 +57,22 @@ export default function CustomersPage() {
     );
   });
 
-  function getStatusColor(status: string) {
-    const colors: Record<string, string> = {
-      ACTIVE: 'bg-green-100 text-green-800',
-      INACTIVE: 'bg-gray-100 text-gray-800',
-      BLOCKED: 'bg-red-100 text-red-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+  function getStatusColor(isActive: boolean) {
+    return isActive
+      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+      : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
   }
 
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Customers</h1>
-        <Button asChild>
-          <Link href="/customers/new">+ Add Customer</Link>
-        </Button>
+        <h1 className="text-2xl font-bold text-dark-800 dark:text-white">Customers</h1>
+        <Link
+          href="/customers/new"
+          className="rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-600 transition-colors"
+        >
+          + Add Customer
+        </Link>
       </div>
 
       {/* Search */}
@@ -82,22 +82,22 @@ export default function CustomersPage() {
           placeholder="Search customers..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md rounded-lg border p-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full max-w-md rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-800 px-4 py-3 text-dark-800 dark:text-white placeholder-dark-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
         />
       </div>
 
       {/* Customers Table */}
-      <div className="rounded-xl bg-white shadow-sm">
+      <div className="rounded-xl bg-white dark:bg-dark-800 shadow-sm border border-dark-100 dark:border-dark-700">
         {isLoading ? (
-          <div className="py-12 text-center text-gray-500">Loading...</div>
+          <div className="py-12 text-center text-dark-500 dark:text-dark-400">Loading...</div>
         ) : filteredCustomers.length === 0 ? (
-          <div className="py-12 text-center text-gray-500">No customers found</div>
+          <div className="py-12 text-center text-dark-500 dark:text-dark-400">No customers found</div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-left text-sm text-gray-500">
+                  <tr className="border-b border-dark-100 dark:border-dark-700 bg-dark-50 dark:bg-dark-900 text-left text-sm text-dark-500 dark:text-dark-400">
                     <th className="px-6 py-4 font-medium">Name</th>
                     <th className="px-6 py-4 font-medium">Email</th>
                     <th className="px-6 py-4 font-medium">Phone</th>
@@ -109,25 +109,42 @@ export default function CustomersPage() {
                 </thead>
                 <tbody>
                   {filteredCustomers.map((customer) => (
-                    <tr key={customer.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <tr
+                      key={customer.id}
+                      className="border-b border-dark-100 dark:border-dark-700 last:border-0 hover:bg-dark-50 dark:hover:bg-dark-700/50"
+                    >
                       <td className="px-6 py-4">
-                        <Link href={`/customers/${customer.id}`} className="font-medium text-primary hover:underline">
+                        <Link
+                          href={`/customers/${customer.id}`}
+                          className="font-medium text-primary-600 dark:text-primary-400 hover:underline"
+                        >
                           {customer.firstName} {customer.lastName}
                         </Link>
                       </td>
-                      <td className="px-6 py-4">{customer.email || '-'}</td>
-                      <td className="px-6 py-4">{customer.phone || '-'}</td>
-                      <td className="px-6 py-4">{customer.properties?.length || 0}</td>
+                      <td className="px-6 py-4 text-dark-700 dark:text-dark-300">
+                        {customer.email || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-dark-700 dark:text-dark-300">
+                        {customer.phone || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-dark-700 dark:text-dark-300">
+                        {customer.properties?.length || 0}
+                      </td>
                       <td className="px-6 py-4">
-                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(customer.status)}`}>
-                          {customer.status}
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(customer.isActive)}`}
+                        >
+                          {customer.isActive ? 'ACTIVE' : 'INACTIVE'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-500">
-                        {new Date(customer.createdAt).toLocaleDateString()}
+                      <td className="px-6 py-4 text-dark-500 dark:text-dark-400">
+                        {formatDate(customer.createdAt)}
                       </td>
                       <td className="px-6 py-4">
-                        <Link href={`/customers/${customer.id}`} className="text-primary hover:underline">
+                        <Link
+                          href={`/customers/${customer.id}`}
+                          className="text-primary-600 dark:text-primary-400 hover:underline"
+                        >
                           View
                         </Link>
                       </td>
@@ -138,21 +155,21 @@ export default function CustomersPage() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t px-6 py-4">
+              <div className="flex items-center justify-between border-t border-dark-100 dark:border-dark-700 px-6 py-4">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="rounded px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
+                  className="rounded-lg px-4 py-2 text-sm text-dark-700 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-700 disabled:opacity-50"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-dark-500 dark:text-dark-400">
                   Page {page} of {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="rounded px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
+                  className="rounded-lg px-4 py-2 text-sm text-dark-700 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-700 disabled:opacity-50"
                 >
                   Next
                 </button>
