@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { apiService } from '@/services/api';
+import { apiService } from '@/lib/api';
 
 interface Column {
   key: string;

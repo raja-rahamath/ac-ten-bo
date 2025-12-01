@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { apiService } from '@/services/api';
+import { apiService } from '@/lib/api';
 
 interface Room {
   id: string;

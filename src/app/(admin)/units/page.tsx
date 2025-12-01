@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { apiService } from '@/services/api';
+import { apiService } from '@/lib/api';
 
 interface Unit {
   id: string;
