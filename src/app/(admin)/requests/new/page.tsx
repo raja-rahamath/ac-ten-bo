@@ -65,12 +65,15 @@ export default function NewRequestPage() {
     buildingNumber: '',
     roadNumber: '',
     blockNumber: '',
+    governorateId: '',
     zoneId: '',
     flatNumber: '', // optional
   });
 
-  // Zones for property creation
-  const [zones, setZones] = useState<{ id: string; name: string }[]>([]);
+  // Governorates and Zones for property creation
+  const [governorates, setGovernorates] = useState<{ id: string; name: string }[]>([]);
+  const [zones, setZones] = useState<{ id: string; name: string; governorateId?: string }[]>([]);
+  const [filteredZones, setFilteredZones] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     fetchDropdownData();
@@ -101,6 +104,20 @@ export default function NewRequestPage() {
     }
   }, [propertyId, roomId]);
 
+  // Filter zones when governorate changes
+  useEffect(() => {
+    if (newProperty.governorateId) {
+      const filtered = zones.filter(z => z.governorateId === newProperty.governorateId);
+      setFilteredZones(filtered);
+      // Reset zone if it doesn't belong to selected governorate
+      if (newProperty.zoneId && !filtered.find(z => z.id === newProperty.zoneId)) {
+        setNewProperty(prev => ({ ...prev, zoneId: '' }));
+      }
+    } else {
+      setFilteredZones(zones);
+    }
+  }, [newProperty.governorateId, zones]);
+
   async function fetchCustomerById(id: string) {
     const token = localStorage.getItem('accessToken');
     try {
@@ -126,9 +143,10 @@ export default function NewRequestPage() {
     const headers = { Authorization: `Bearer ${token}` };
 
     try {
-      const [typesRes, zonesRes] = await Promise.all([
+      const [typesRes, zonesRes, governoratesRes] = await Promise.all([
         fetch('http://localhost:4001/api/v1/complaint-types', { headers }).catch(() => null),
         fetch('http://localhost:4001/api/v1/zones', { headers }).catch(() => null),
+        fetch('http://localhost:4001/api/v1/governorates', { headers }).catch(() => null),
       ]);
 
       if (typesRes) {
@@ -142,6 +160,14 @@ export default function NewRequestPage() {
         const zonesData = await zonesRes.json();
         if (zonesData.success) {
           setZones(zonesData.data);
+          setFilteredZones(zonesData.data);
+        }
+      }
+
+      if (governoratesRes) {
+        const governoratesData = await governoratesRes.json();
+        if (governoratesData.success) {
+          setGovernorates(governoratesData.data);
         }
       }
 
@@ -353,7 +379,7 @@ export default function NewRequestPage() {
 
       toast.success('Property created successfully!');
       setShowNewPropertyModal(false);
-      setNewProperty({ buildingNumber: '', roadNumber: '', blockNumber: '', zoneId: '', flatNumber: '' });
+      setNewProperty({ buildingNumber: '', roadNumber: '', blockNumber: '', governorateId: '', zoneId: '', flatNumber: '' });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to create property');
     } finally {
@@ -739,23 +765,44 @@ export default function NewRequestPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
-                  Zone/Area *
-                </label>
-                <select
-                  value={newProperty.zoneId}
-                  onChange={(e) => setNewProperty({ ...newProperty, zoneId: e.target.value })}
-                  required
-                  className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none"
-                >
-                  <option value="">Select Zone/Area</option>
-                  {zones.map((zone) => (
-                    <option key={zone.id} value={zone.id}>
-                      {zone.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
+                    Governorate *
+                  </label>
+                  <select
+                    value={newProperty.governorateId}
+                    onChange={(e) => setNewProperty({ ...newProperty, governorateId: e.target.value, zoneId: '' })}
+                    required
+                    className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none"
+                  >
+                    <option value="">Select Governorate</option>
+                    {governorates.map((gov) => (
+                      <option key={gov.id} value={gov.id}>
+                        {gov.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
+                    Zone/Area *
+                  </label>
+                  <select
+                    value={newProperty.zoneId}
+                    onChange={(e) => setNewProperty({ ...newProperty, zoneId: e.target.value })}
+                    required
+                    disabled={!newProperty.governorateId}
+                    className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none disabled:opacity-50"
+                  >
+                    <option value="">{newProperty.governorateId ? 'Select Zone/Area' : 'Select Governorate first'}</option>
+                    {filteredZones.map((zone) => (
+                      <option key={zone.id} value={zone.id}>
+                        {zone.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-4">
