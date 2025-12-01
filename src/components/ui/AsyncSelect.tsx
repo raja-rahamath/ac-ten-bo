@@ -54,8 +54,10 @@ export function AsyncSelect({
   useEffect(() => {
     if (initialOption) {
       setSelectedOption(initialOption);
+      // Also notify parent of the selection
+      onChange(initialOption.value, initialOption);
     }
-  }, [initialOption]);
+  }, [initialOption]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle click outside to close dropdown
   useEffect(() => {
