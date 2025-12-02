@@ -146,23 +146,23 @@ export default function DashboardPage() {
 
   function getStatusBadge(status: string) {
     const styles: Record<string, string> = {
-      NEW: 'bg-sky-100 text-sky-700 ring-1 ring-sky-200',
-      ASSIGNED: 'bg-amber-100 text-amber-700 ring-1 ring-amber-200',
-      IN_PROGRESS: 'bg-violet-100 text-violet-700 ring-1 ring-violet-200',
-      COMPLETED: 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200',
-      CANCELLED: 'bg-dark-100 text-dark-600 ring-1 ring-dark-200',
+      NEW: 'bg-sky-100 text-sky-700 ring-1 ring-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:ring-sky-800',
+      ASSIGNED: 'bg-amber-100 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800',
+      IN_PROGRESS: 'bg-violet-100 text-violet-700 ring-1 ring-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-800',
+      COMPLETED: 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:ring-emerald-800',
+      CANCELLED: 'bg-dark-100 text-dark-600 ring-1 ring-dark-200 dark:bg-dark-700 dark:text-dark-400 dark:ring-dark-600',
     };
-    return styles[status] || 'bg-dark-100 text-dark-600 ring-1 ring-dark-200';
+    return styles[status] || 'bg-dark-100 text-dark-600 ring-1 ring-dark-200 dark:bg-dark-700 dark:text-dark-400 dark:ring-dark-600';
   }
 
   function getPriorityBadge(priority: string) {
     const styles: Record<string, string> = {
-      LOW: 'text-dark-500',
-      MEDIUM: 'text-amber-600 font-medium',
-      HIGH: 'text-orange-600 font-semibold',
-      URGENT: 'text-red-600 font-bold',
+      LOW: 'text-dark-500 dark:text-dark-400',
+      MEDIUM: 'text-amber-600 dark:text-amber-400 font-medium',
+      HIGH: 'text-orange-600 dark:text-orange-400 font-semibold',
+      URGENT: 'text-red-600 dark:text-red-400 font-bold',
     };
-    return styles[priority] || 'text-dark-500';
+    return styles[priority] || 'text-dark-500 dark:text-dark-400';
   }
 
   if (isLoading) {
@@ -204,7 +204,7 @@ export default function DashboardPage() {
         {statCards.map((card, index) => (
           <div
             key={card.title}
-            className="group relative overflow-hidden rounded-2xl bg-white p-5 shadow-soft transition-all duration-300 hover:shadow-soft-lg hover:-translate-y-1"
+            className="group relative overflow-hidden rounded-2xl bg-white dark:bg-dark-800 p-5 shadow-soft dark:shadow-none dark:border dark:border-dark-700 transition-all duration-300 hover:shadow-soft-lg dark:hover:border-dark-600 hover:-translate-y-1"
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex items-start justify-between">
@@ -212,30 +212,30 @@ export default function DashboardPage() {
                 {card.icon}
               </div>
               {card.trend && (
-                <span className={`text-xs font-medium ${card.trend.startsWith('+') ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <span className={`text-xs font-medium ${card.trend.startsWith('+') ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                   {card.trend}
                 </span>
               )}
             </div>
             <div className="mt-4">
-              <p className="text-3xl font-bold text-dark-800">{card.value}</p>
-              <p className="mt-1 text-sm text-dark-400">{card.title}</p>
+              <p className="text-3xl font-bold text-dark-800 dark:text-white">{card.value}</p>
+              <p className="mt-1 text-sm text-dark-400 dark:text-dark-500">{card.title}</p>
             </div>
-            <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-dark-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+            <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-dark-50 dark:bg-dark-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
           </div>
         ))}
       </div>
 
       {/* Recent Requests */}
-      <div className="card-modern overflow-hidden">
-        <div className="flex items-center justify-between border-b border-dark-100 px-6 py-4">
+      <div className="card-modern overflow-hidden dark:bg-dark-800 dark:border-dark-700">
+        <div className="flex items-center justify-between border-b border-dark-100 dark:border-dark-700 px-6 py-4">
           <div>
-            <h2 className="text-lg font-semibold text-dark-800">Recent Service Requests</h2>
-            <p className="text-sm text-dark-400">Latest requests from your customers</p>
+            <h2 className="text-lg font-semibold text-dark-800 dark:text-white">Recent Service Requests</h2>
+            <p className="text-sm text-dark-400 dark:text-dark-500">Latest requests from your customers</p>
           </div>
           <Link
             href="/requests"
-            className="flex items-center gap-1 text-sm font-medium text-primary-500 hover:text-primary-600 transition-colors"
+            className="flex items-center gap-1 text-sm font-medium text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
           >
             View all
             {Icons.arrowRight}
@@ -244,11 +244,11 @@ export default function DashboardPage() {
 
         {recentRequests.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="h-16 w-16 rounded-2xl bg-dark-100 flex items-center justify-center text-dark-400 mb-4">
+            <div className="h-16 w-16 rounded-2xl bg-dark-100 dark:bg-dark-700 flex items-center justify-center text-dark-400 mb-4">
               {Icons.clipboard}
             </div>
-            <p className="text-dark-500 font-medium">No service requests yet</p>
-            <p className="text-sm text-dark-400 mt-1">They will appear here once created</p>
+            <p className="text-dark-500 dark:text-dark-400 font-medium">No service requests yet</p>
+            <p className="text-sm text-dark-400 dark:text-dark-500 mt-1">They will appear here once created</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -271,21 +271,21 @@ export default function DashboardPage() {
                     style={{ animationDelay: `${index * 30}ms` }}
                   >
                     <td>
-                      <Link href={`/requests/${request.id}`} className="font-medium text-primary-500 hover:text-primary-600 transition-colors">
+                      <Link href={`/requests/${request.id}`} className="font-medium text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
                         {request.requestNo}
                       </Link>
                     </td>
-                    <td className="font-medium text-dark-700 max-w-[200px] truncate">{request.title}</td>
+                    <td className="font-medium text-dark-700 dark:text-dark-300 max-w-[200px] truncate">{request.title}</td>
                     <td>
                       {request.customer ? (
                         <div className="flex items-center gap-2">
                           <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-primary-400 to-accent-purple flex items-center justify-center text-white text-xs font-medium">
                             {request.customer.firstName[0]}{request.customer.lastName[0]}
                           </div>
-                          <span>{request.customer.firstName} {request.customer.lastName}</span>
+                          <span className="text-dark-700 dark:text-dark-300">{request.customer.firstName} {request.customer.lastName}</span>
                         </div>
                       ) : (
-                        <span className="text-dark-400">-</span>
+                        <span className="text-dark-400 dark:text-dark-500">-</span>
                       )}
                     </td>
                     <td>
@@ -298,7 +298,7 @@ export default function DashboardPage() {
                         {request.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="text-dark-400">
+                    <td className="text-dark-400 dark:text-dark-500">
                       {new Date(request.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',

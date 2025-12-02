@@ -214,23 +214,23 @@ export default function EmployeesPage() {
 
       {/* Import Result Modal */}
       {importResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-dark-800 mb-4">Import Results</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-dark-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-xl dark:border dark:border-dark-700">
+            <h3 className="text-lg font-semibold text-dark-800 dark:text-white mb-4">Import Results</h3>
             <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50">
-                <span className="text-emerald-600 font-medium">{importResult.success}</span>
-                <span className="text-emerald-700">employees imported successfully</span>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">{importResult.success}</span>
+                <span className="text-emerald-700 dark:text-emerald-300">employees imported successfully</span>
               </div>
               {importResult.failed > 0 && (
                 <>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50">
-                    <span className="text-red-600 font-medium">{importResult.failed}</span>
-                    <span className="text-red-700">rows failed</span>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+                    <span className="text-red-600 dark:text-red-400 font-medium">{importResult.failed}</span>
+                    <span className="text-red-700 dark:text-red-300">rows failed</span>
                   </div>
                   <div className="max-h-40 overflow-y-auto text-sm">
                     {importResult.errors.map((err, i) => (
-                      <p key={i} className="text-red-600 py-1">
+                      <p key={i} className="text-red-600 dark:text-red-400 py-1">
                         Row {err.row}: {err.error}
                       </p>
                     ))}
@@ -251,13 +251,13 @@ export default function EmployeesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-dark-800">Employees</h1>
-          <p className="text-dark-400 mt-1">{total} team members</p>
+          <h1 className="text-2xl font-bold text-dark-800 dark:text-white">Employees</h1>
+          <p className="text-dark-400 dark:text-dark-500 mt-1">{total} team members</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleDownloadTemplate}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dark-200 text-dark-600 hover:bg-dark-50 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dark-200 dark:border-dark-600 text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors text-sm font-medium"
             title="Download import template"
           >
             {Icons.template}
@@ -266,7 +266,7 @@ export default function EmployeesPage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dark-200 text-dark-600 hover:bg-dark-50 transition-colors text-sm font-medium disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dark-200 dark:border-dark-600 text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors text-sm font-medium disabled:opacity-50"
           >
             {Icons.upload}
             {isImporting ? 'Importing...' : 'Import'}
@@ -274,7 +274,7 @@ export default function EmployeesPage() {
           <button
             onClick={handleExport}
             disabled={isExporting}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dark-200 text-dark-600 hover:bg-dark-50 transition-colors text-sm font-medium disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dark-200 dark:border-dark-600 text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors text-sm font-medium disabled:opacity-50"
           >
             {Icons.download}
             {isExporting ? 'Exporting...' : 'Export'}
@@ -303,21 +303,21 @@ export default function EmployeesPage() {
       </div>
 
       {/* Employees Table */}
-      <div className="card-modern overflow-hidden">
+      <div className="card-modern overflow-hidden dark:bg-dark-800 dark:border-dark-700">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="flex flex-col items-center gap-3">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-500"></div>
-              <span className="text-dark-400 text-sm">Loading employees...</span>
+              <span className="text-dark-400 dark:text-dark-500 text-sm">Loading employees...</span>
             </div>
           </div>
         ) : filteredEmployees.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="h-16 w-16 rounded-2xl bg-dark-100 flex items-center justify-center text-dark-400 mb-4">
+            <div className="h-16 w-16 rounded-2xl bg-dark-100 dark:bg-dark-700 flex items-center justify-center text-dark-400 mb-4">
               {Icons.user}
             </div>
-            <p className="text-dark-500 font-medium">No employees found</p>
-            <p className="text-sm text-dark-400 mt-1">
+            <p className="text-dark-500 dark:text-dark-400 font-medium">No employees found</p>
+            <p className="text-sm text-dark-400 dark:text-dark-500 mt-1">
               {search ? 'Try adjusting your search terms' : 'Add your first team member to get started'}
             </p>
           </div>
@@ -350,31 +350,31 @@ export default function EmployeesPage() {
                           <div>
                             <Link
                               href={`/employees/${employee.id}`}
-                              className="font-medium text-dark-800 hover:text-primary-500 transition-colors"
+                              className="font-medium text-dark-800 dark:text-white hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
                             >
                               {employee.firstName} {employee.lastName}
                             </Link>
-                            <p className="text-xs text-dark-400">{employee.employeeNo}</p>
+                            <p className="text-xs text-dark-400 dark:text-dark-500">{employee.employeeNo}</p>
                           </div>
                         </div>
                       </td>
                       <td>
                         <div>
-                          <p className="text-dark-700">{employee.email}</p>
-                          <p className="text-xs text-dark-400">{employee.phone || 'No phone'}</p>
+                          <p className="text-dark-700 dark:text-dark-300">{employee.email}</p>
+                          <p className="text-xs text-dark-400 dark:text-dark-500">{employee.phone || 'No phone'}</p>
                         </div>
                       </td>
                       <td>
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-dark-100 text-dark-600 text-xs font-medium">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-dark-100 dark:bg-dark-700 text-dark-600 dark:text-dark-300 text-xs font-medium">
                           {employee.department?.name || '-'}
                         </span>
                       </td>
-                      <td className="text-dark-600">{employee.jobTitle?.name || '-'}</td>
+                      <td className="text-dark-600 dark:text-dark-400">{employee.jobTitle?.name || '-'}</td>
                       <td>
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                           employee.isActive
-                            ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200'
-                            : 'bg-dark-100 text-dark-500 ring-1 ring-dark-200'
+                            ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:ring-emerald-800'
+                            : 'bg-dark-100 text-dark-500 ring-1 ring-dark-200 dark:bg-dark-700 dark:text-dark-400 dark:ring-dark-600'
                         }`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${employee.isActive ? 'bg-emerald-500' : 'bg-dark-400'}`}></span>
                           {employee.isActive ? 'Active' : 'Inactive'}
@@ -383,7 +383,7 @@ export default function EmployeesPage() {
                       <td>
                         <Link
                           href={`/employees/${employee.id}`}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-primary-500 hover:text-primary-600 transition-colors"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
                         >
                           View
                           {Icons.chevronRight}
@@ -396,15 +396,15 @@ export default function EmployeesPage() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-dark-100 px-6 py-4">
-                <p className="text-sm text-dark-500">
+              <div className="flex items-center justify-between border-t border-dark-100 dark:border-dark-700 px-6 py-4">
+                <p className="text-sm text-dark-500 dark:text-dark-400">
                   Showing {(page - 1) * 20 + 1} to {Math.min(page * 20, total)} of {total} employees
                 </p>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="p-2 rounded-lg hover:bg-dark-100 text-dark-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 text-dark-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {Icons.chevronLeft}
                   </button>
@@ -418,7 +418,7 @@ export default function EmployeesPage() {
                           className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${
                             page === pageNum
                               ? 'bg-primary-500 text-white'
-                              : 'hover:bg-dark-100 text-dark-600'
+                              : 'hover:bg-dark-100 dark:hover:bg-dark-700 text-dark-600 dark:text-dark-300'
                           }`}
                         >
                           {pageNum}
@@ -429,7 +429,7 @@ export default function EmployeesPage() {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="p-2 rounded-lg hover:bg-dark-100 text-dark-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 text-dark-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {Icons.chevronRight}
                   </button>

@@ -83,14 +83,14 @@ export default function InvoicesPage() {
 
   function getStatusColor(status: string) {
     const colors: Record<string, string> = {
-      DRAFT: 'bg-gray-100 text-gray-800',
-      SENT: 'bg-blue-100 text-blue-800',
-      PARTIAL: 'bg-yellow-100 text-yellow-800',
-      PAID: 'bg-green-100 text-green-800',
-      OVERDUE: 'bg-red-100 text-red-800',
-      CANCELLED: 'bg-gray-100 text-gray-800',
+      DRAFT: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+      SENT: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+      PARTIAL: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+      PAID: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+      OVERDUE: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+      CANCELLED: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
   }
 
   function formatCurrency(amount: number | undefined) {
@@ -117,34 +117,34 @@ export default function InvoicesPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Total Invoices</p>
-            <p className="text-2xl font-bold">{stats.total}</p>
+          <div className="rounded-xl bg-white dark:bg-dark-800 p-4 shadow-sm border border-dark-100 dark:border-dark-700">
+            <p className="text-sm text-dark-500 dark:text-dark-400">Total Invoices</p>
+            <p className="text-2xl font-bold text-dark-800 dark:text-white">{stats.total}</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Total Revenue</p>
-            <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalRevenue)}</p>
+          <div className="rounded-xl bg-white dark:bg-dark-800 p-4 shadow-sm border border-dark-100 dark:border-dark-700">
+            <p className="text-sm text-dark-500 dark:text-dark-400">Total Revenue</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(stats.totalRevenue)}</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Pending</p>
-            <p className="text-2xl font-bold text-blue-600">
+          <div className="rounded-xl bg-white dark:bg-dark-800 p-4 shadow-sm border border-dark-100 dark:border-dark-700">
+            <p className="text-sm text-dark-500 dark:text-dark-400">Pending</p>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {formatCurrency(stats.byStatus['SENT']?.amount || 0)}
             </p>
-            <p className="text-xs text-gray-400">{stats.byStatus['SENT']?.count || 0} invoices</p>
+            <p className="text-xs text-dark-400 dark:text-dark-500">{stats.byStatus['SENT']?.count || 0} invoices</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Partial Paid</p>
-            <p className="text-2xl font-bold text-yellow-600">
+          <div className="rounded-xl bg-white dark:bg-dark-800 p-4 shadow-sm border border-dark-100 dark:border-dark-700">
+            <p className="text-sm text-dark-500 dark:text-dark-400">Partial Paid</p>
+            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
               {formatCurrency(stats.byStatus['PARTIAL']?.amount || 0)}
             </p>
-            <p className="text-xs text-gray-400">{stats.byStatus['PARTIAL']?.count || 0} invoices</p>
+            <p className="text-xs text-dark-400 dark:text-dark-500">{stats.byStatus['PARTIAL']?.count || 0} invoices</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Overdue</p>
-            <p className="text-2xl font-bold text-red-600">
+          <div className="rounded-xl bg-white dark:bg-dark-800 p-4 shadow-sm border border-dark-100 dark:border-dark-700">
+            <p className="text-sm text-dark-500 dark:text-dark-400">Overdue</p>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400">
               {formatCurrency(stats.byStatus['OVERDUE']?.amount || 0)}
             </p>
-            <p className="text-xs text-gray-400">{stats.byStatus['OVERDUE']?.count || 0} invoices</p>
+            <p className="text-xs text-dark-400 dark:text-dark-500">{stats.byStatus['OVERDUE']?.count || 0} invoices</p>
           </div>
         </div>
       )}
@@ -157,7 +157,7 @@ export default function InvoicesPage() {
             placeholder="Search invoices..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="rounded-lg border px-4 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-800 px-4 py-2.5 text-dark-800 dark:text-white placeholder-dark-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
           <Button type="submit" variant="outline">Search</Button>
         </form>
@@ -166,10 +166,10 @@ export default function InvoicesPage() {
             <button
               key={status}
               onClick={() => { setFilter(status); setPage(1); }}
-              className={`rounded-full px-4 py-2 text-sm ${
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 filter === status
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-white dark:bg-dark-800 text-dark-600 dark:text-dark-300 border border-dark-200 dark:border-dark-600 hover:bg-dark-50 dark:hover:bg-dark-700'
               }`}
             >
               {status}
@@ -179,17 +179,20 @@ export default function InvoicesPage() {
       </div>
 
       {/* Invoices Table */}
-      <div className="rounded-xl bg-white shadow-sm">
+      <div className="rounded-xl bg-white dark:bg-dark-800 shadow-sm border border-dark-100 dark:border-dark-700">
         {isLoading ? (
-          <div className="py-12 text-center text-gray-500">Loading...</div>
+          <div className="py-12 text-center text-dark-500 dark:text-dark-400">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-2" />
+            Loading...
+          </div>
         ) : invoices.length === 0 ? (
-          <div className="py-12 text-center text-gray-500">No invoices found</div>
+          <div className="py-12 text-center text-dark-500 dark:text-dark-400">No invoices found</div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-left text-sm text-gray-500">
+                  <tr className="border-b border-dark-100 dark:border-dark-700 bg-dark-50 dark:bg-dark-900 text-left text-sm text-dark-500 dark:text-dark-400">
                     <th className="px-6 py-4 font-medium">Invoice #</th>
                     <th className="px-6 py-4 font-medium">Customer</th>
                     <th className="px-6 py-4 font-medium">Service Request</th>
@@ -202,49 +205,49 @@ export default function InvoicesPage() {
                 </thead>
                 <tbody>
                   {invoices.map((invoice) => (
-                    <tr key={invoice.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <tr key={invoice.id} className="border-b border-dark-100 dark:border-dark-700 last:border-0 hover:bg-dark-50 dark:hover:bg-dark-700/50">
                       <td className="px-6 py-4">
-                        <Link href={`/invoices/${invoice.id}`} className="font-medium text-primary hover:underline">
+                        <Link href={`/invoices/${invoice.id}`} className="font-medium text-primary-600 dark:text-primary-400 hover:underline">
                           {invoice.invoiceNo}
                         </Link>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-dark-700 dark:text-dark-300">
                         {invoice.customer ? (
-                          <Link href={`/customers/${invoice.customer.id}`} className="hover:text-primary">
+                          <Link href={`/customers/${invoice.customer.id}`} className="hover:text-primary-600 dark:hover:text-primary-400">
                             {invoice.customer.orgName || `${invoice.customer.firstName} ${invoice.customer.lastName}`}
                           </Link>
                         ) : '-'}
                       </td>
                       <td className="px-6 py-4">
                         {invoice.serviceRequest ? (
-                          <Link href={`/requests/${invoice.serviceRequest.id}`} className="text-primary hover:underline">
+                          <Link href={`/requests/${invoice.serviceRequest.id}`} className="text-primary-600 dark:text-primary-400 hover:underline">
                             {invoice.serviceRequest.requestNo}
                           </Link>
                         ) : '-'}
                       </td>
-                      <td className="px-6 py-4 text-right font-medium">{formatCurrency(invoice.total)}</td>
+                      <td className="px-6 py-4 text-right font-medium text-dark-800 dark:text-white">{formatCurrency(invoice.total)}</td>
                       <td className="px-6 py-4 text-right">
-                        <span className={invoice.paidAmount ? 'text-green-600' : 'text-gray-400'}>
+                        <span className={invoice.paidAmount ? 'text-green-600 dark:text-green-400' : 'text-dark-400 dark:text-dark-500'}>
                           {formatCurrency(invoice.paidAmount || 0)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`rounded-full px-2 py-1 text-xs font-medium ${
-                          isOverdue(invoice) ? 'bg-red-100 text-red-800' : getStatusColor(invoice.status)
+                          isOverdue(invoice) ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : getStatusColor(invoice.status)
                         }`}>
                           {isOverdue(invoice) ? 'OVERDUE' : invoice.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-500">
+                      <td className="px-6 py-4 text-dark-500 dark:text-dark-400">
                         {invoice.dueDate ? (
-                          <span className={isOverdue(invoice) ? 'text-red-600 font-medium' : ''}>
+                          <span className={isOverdue(invoice) ? 'text-red-600 dark:text-red-400 font-medium' : ''}>
                             {new Date(invoice.dueDate).toLocaleDateString()}
                           </span>
                         ) : '-'}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                          <Link href={`/invoices/${invoice.id}`} className="text-primary hover:underline">
+                          <Link href={`/invoices/${invoice.id}`} className="text-primary-600 dark:text-primary-400 hover:underline">
                             View
                           </Link>
                         </div>
@@ -256,21 +259,21 @@ export default function InvoicesPage() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t px-6 py-4">
+              <div className="flex items-center justify-between border-t border-dark-100 dark:border-dark-700 px-6 py-4">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="rounded px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium rounded-lg border border-dark-200 dark:border-dark-600 text-dark-700 dark:text-dark-300 disabled:opacity-50 hover:bg-dark-50 dark:hover:bg-dark-700"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-dark-500 dark:text-dark-400">
                   Page {page} of {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="rounded px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium rounded-lg border border-dark-200 dark:border-dark-600 text-dark-700 dark:text-dark-300 disabled:opacity-50 hover:bg-dark-50 dark:hover:bg-dark-700"
                 >
                   Next
                 </button>

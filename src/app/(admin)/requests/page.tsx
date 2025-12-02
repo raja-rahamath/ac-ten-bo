@@ -62,23 +62,23 @@ export default function RequestsPage() {
 
   function getStatusColor(status: string) {
     const colors: Record<string, string> = {
-      NEW: 'bg-blue-100 text-blue-800',
-      ASSIGNED: 'bg-yellow-100 text-yellow-800',
-      IN_PROGRESS: 'bg-purple-100 text-purple-800',
-      COMPLETED: 'bg-green-100 text-green-800',
-      CANCELLED: 'bg-gray-100 text-gray-800',
+      NEW: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+      ASSIGNED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+      IN_PROGRESS: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+      COMPLETED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+      CANCELLED: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
   }
 
   function getPriorityColor(priority: string) {
     const colors: Record<string, string> = {
-      LOW: 'text-gray-600',
-      MEDIUM: 'text-yellow-600',
-      HIGH: 'text-orange-600',
-      URGENT: 'text-red-600',
+      LOW: 'text-gray-600 dark:text-gray-400',
+      MEDIUM: 'text-yellow-600 dark:text-yellow-400',
+      HIGH: 'text-orange-600 dark:text-orange-400',
+      URGENT: 'text-red-600 dark:text-red-400',
     };
-    return colors[priority] || 'text-gray-600';
+    return colors[priority] || 'text-gray-600 dark:text-gray-400';
   }
 
   return (
@@ -91,15 +91,15 @@ export default function RequestsPage() {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex gap-2">
+      <div className="mb-6 flex flex-wrap gap-2">
         {['ALL', 'NEW', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((status) => (
           <button
             key={status}
             onClick={() => { setFilter(status); setPage(1); }}
-            className={`rounded-full px-4 py-2 text-sm ${
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               filter === status
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-primary-500 text-white'
+                : 'bg-white dark:bg-dark-800 text-dark-600 dark:text-dark-300 border border-dark-200 dark:border-dark-600 hover:bg-dark-50 dark:hover:bg-dark-700'
             }`}
           >
             {status.replace('_', ' ')}
@@ -108,17 +108,20 @@ export default function RequestsPage() {
       </div>
 
       {/* Requests Table */}
-      <div className="rounded-xl bg-white shadow-sm">
+      <div className="rounded-xl bg-white dark:bg-dark-800 shadow-sm border border-dark-100 dark:border-dark-700">
         {isLoading ? (
-          <div className="py-12 text-center text-gray-500">Loading...</div>
+          <div className="py-12 text-center text-dark-500 dark:text-dark-400">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-2" />
+            Loading...
+          </div>
         ) : requests.length === 0 ? (
-          <div className="py-12 text-center text-gray-500">No requests found</div>
+          <div className="py-12 text-center text-dark-500 dark:text-dark-400">No requests found</div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-left text-sm text-gray-500">
+                  <tr className="border-b border-dark-100 dark:border-dark-700 bg-dark-50 dark:bg-dark-900 text-left text-sm text-dark-500 dark:text-dark-400">
                     <th className="px-6 py-4 font-medium">Request #</th>
                     <th className="px-6 py-4 font-medium">Title</th>
                     <th className="px-6 py-4 font-medium">Customer</th>
@@ -132,17 +135,17 @@ export default function RequestsPage() {
                 </thead>
                 <tbody>
                   {requests.map((request) => (
-                    <tr key={request.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <tr key={request.id} className="border-b border-dark-100 dark:border-dark-700 last:border-0 hover:bg-dark-50 dark:hover:bg-dark-700/50">
                       <td className="px-6 py-4">
-                        <Link href={`/requests/${request.id}`} className="text-primary hover:underline">
+                        <Link href={`/requests/${request.id}`} className="font-medium text-primary-600 dark:text-primary-400 hover:underline">
                           {request.requestNo}
                         </Link>
                       </td>
-                      <td className="px-6 py-4 max-w-xs truncate">{request.title}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 max-w-xs truncate text-dark-700 dark:text-dark-300">{request.title}</td>
+                      <td className="px-6 py-4 text-dark-700 dark:text-dark-300">
                         {request.customer ? `${request.customer.firstName} ${request.customer.lastName}` : '-'}
                       </td>
-                      <td className="px-6 py-4">{request.complaintType?.name || '-'}</td>
+                      <td className="px-6 py-4 text-dark-600 dark:text-dark-400">{request.complaintType?.name || '-'}</td>
                       <td className="px-6 py-4">
                         <span className={`font-medium ${getPriorityColor(request.priority)}`}>
                           {request.priority}
@@ -153,16 +156,16 @@ export default function RequestsPage() {
                           {request.status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-dark-600 dark:text-dark-400">
                         {request.assignedEmployee
                           ? `${request.assignedEmployee.firstName} ${request.assignedEmployee.lastName}`
                           : '-'}
                       </td>
-                      <td className="px-6 py-4 text-gray-500">
+                      <td className="px-6 py-4 text-dark-500 dark:text-dark-400">
                         {new Date(request.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
-                        <Link href={`/requests/${request.id}`} className="text-primary hover:underline">
+                        <Link href={`/requests/${request.id}`} className="text-primary-600 dark:text-primary-400 hover:underline">
                           View
                         </Link>
                       </td>
@@ -174,21 +177,21 @@ export default function RequestsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t px-6 py-4">
+              <div className="flex items-center justify-between border-t border-dark-100 dark:border-dark-700 px-6 py-4">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="rounded px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium rounded-lg border border-dark-200 dark:border-dark-600 text-dark-700 dark:text-dark-300 disabled:opacity-50 hover:bg-dark-50 dark:hover:bg-dark-700"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-dark-500 dark:text-dark-400">
                   Page {page} of {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="rounded px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium rounded-lg border border-dark-200 dark:border-dark-600 text-dark-700 dark:text-dark-300 disabled:opacity-50 hover:bg-dark-50 dark:hover:bg-dark-700"
                 >
                   Next
                 </button>
