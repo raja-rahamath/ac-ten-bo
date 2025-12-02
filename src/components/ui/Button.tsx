@@ -58,6 +58,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={combinedClassName}
         disabled={disabled || isLoading}
+        aria-busy={isLoading}
+        aria-disabled={disabled || isLoading}
         {...props}
       >
         {isLoading && (
@@ -66,6 +68,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <circle
               className="opacity-25"
@@ -82,9 +85,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             />
           </svg>
         )}
-        {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
+        {isLoading && <span className="sr-only">Loading...</span>}
+        {!isLoading && leftIcon && <span className="mr-2" aria-hidden="true">{leftIcon}</span>}
         {children}
-        {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
+        {!isLoading && rightIcon && <span className="ml-2" aria-hidden="true">{rightIcon}</span>}
       </button>
     );
   }

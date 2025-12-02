@@ -14,6 +14,7 @@ interface LanguageContextType {
 
 const translations: Record<Language, Record<string, string>> = {
   en: {
+    // Navigation
     dashboard: 'Dashboard',
     'service-requests': 'Service Requests',
     customers: 'Customers',
@@ -22,6 +23,14 @@ const translations: Record<Language, Record<string, string>> = {
     'email-templates': 'Email Templates',
     reports: 'Reports',
     settings: 'Settings',
+    properties: 'Properties',
+    leaves: 'Leaves',
+    amc: 'AMC',
+    quotes: 'Quotes',
+    receipts: 'Receipts',
+    collections: 'Collections',
+
+    // User menu
     'sign-out': 'Sign out',
     profile: 'Profile',
     'change-password': 'Change Password',
@@ -36,15 +45,59 @@ const translations: Record<Language, Record<string, string>> = {
     email: 'Email',
     role: 'Role',
     'upload-photo': 'Upload Photo',
-    save: 'Save',
-    cancel: 'Cancel',
     'current-password': 'Current Password',
     'new-password': 'New Password',
     'confirm-password': 'Confirm Password',
     'password-changed': 'Password changed successfully',
     'back-office': 'Back Office',
+
+    // Common actions
+    save: 'Save',
+    cancel: 'Cancel',
+    edit: 'Edit',
+    delete: 'Delete',
+    add: 'Add',
+    create: 'Create',
+    update: 'Update',
+    search: 'Search',
+    filter: 'Filter',
+    export: 'Export',
+    import: 'Import',
+    'view-details': 'View Details',
+    close: 'Close',
+    confirm: 'Confirm',
+    back: 'Back',
+    next: 'Next',
+    previous: 'Previous',
+
+    // Table
+    name: 'Name',
+    phone: 'Phone',
+    status: 'Status',
+    date: 'Date',
+    actions: 'Actions',
+    'no-data': 'No data available',
+    loading: 'Loading...',
+    'rows-per-page': 'Rows per page',
+    'showing': 'Showing',
+    'of': 'of',
+
+    // Status
+    active: 'Active',
+    inactive: 'Inactive',
+    pending: 'Pending',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+    'in-progress': 'In Progress',
+
+    // Forms
+    required: 'Required',
+    optional: 'Optional',
+    'select-option': 'Select an option',
+    'enter-value': 'Enter a value',
   },
   ar: {
+    // Navigation
     dashboard: 'لوحة القيادة',
     'service-requests': 'طلبات الخدمة',
     customers: 'العملاء',
@@ -53,6 +106,14 @@ const translations: Record<Language, Record<string, string>> = {
     'email-templates': 'قوالب البريد',
     reports: 'التقارير',
     settings: 'الإعدادات',
+    properties: 'العقارات',
+    leaves: 'الإجازات',
+    amc: 'عقود الصيانة',
+    quotes: 'عروض الأسعار',
+    receipts: 'الإيصالات',
+    collections: 'التحصيلات',
+
+    // User menu
     'sign-out': 'تسجيل الخروج',
     profile: 'الملف الشخصي',
     'change-password': 'تغيير كلمة المرور',
@@ -67,13 +128,56 @@ const translations: Record<Language, Record<string, string>> = {
     email: 'البريد الإلكتروني',
     role: 'الدور',
     'upload-photo': 'تحميل صورة',
-    save: 'حفظ',
-    cancel: 'إلغاء',
     'current-password': 'كلمة المرور الحالية',
     'new-password': 'كلمة المرور الجديدة',
     'confirm-password': 'تأكيد كلمة المرور',
     'password-changed': 'تم تغيير كلمة المرور بنجاح',
     'back-office': 'المكتب الخلفي',
+
+    // Common actions
+    save: 'حفظ',
+    cancel: 'إلغاء',
+    edit: 'تعديل',
+    delete: 'حذف',
+    add: 'إضافة',
+    create: 'إنشاء',
+    update: 'تحديث',
+    search: 'بحث',
+    filter: 'تصفية',
+    export: 'تصدير',
+    import: 'استيراد',
+    'view-details': 'عرض التفاصيل',
+    close: 'إغلاق',
+    confirm: 'تأكيد',
+    back: 'رجوع',
+    next: 'التالي',
+    previous: 'السابق',
+
+    // Table
+    name: 'الاسم',
+    phone: 'الهاتف',
+    status: 'الحالة',
+    date: 'التاريخ',
+    actions: 'الإجراءات',
+    'no-data': 'لا توجد بيانات',
+    loading: 'جاري التحميل...',
+    'rows-per-page': 'صفوف في الصفحة',
+    'showing': 'عرض',
+    'of': 'من',
+
+    // Status
+    active: 'نشط',
+    inactive: 'غير نشط',
+    pending: 'قيد الانتظار',
+    completed: 'مكتمل',
+    cancelled: 'ملغي',
+    'in-progress': 'قيد التنفيذ',
+
+    // Forms
+    required: 'مطلوب',
+    optional: 'اختياري',
+    'select-option': 'اختر خياراً',
+    'enter-value': 'أدخل قيمة',
   },
 };
 

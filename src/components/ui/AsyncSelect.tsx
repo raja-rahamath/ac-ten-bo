@@ -22,6 +22,8 @@ interface AsyncSelectProps {
   initialOption?: AsyncSelectOption;
   onCreateNew?: () => void;
   createNewLabel?: string;
+  'aria-label'?: string;
+  id?: string;
 }
 
 export function AsyncSelect({
@@ -38,7 +40,10 @@ export function AsyncSelect({
   initialOption,
   onCreateNew,
   createNewLabel = 'Create New',
+  'aria-label': ariaLabel,
+  id,
 }: AsyncSelectProps) {
+  const listboxId = id ? `${id}-listbox` : 'async-select-listbox';
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [options, setOptions] = useState<AsyncSelectOption[]>([]);
@@ -175,7 +180,7 @@ export function AsyncSelect({
         onClick={() => !disabled && inputRef.current?.focus()}
       >
         {/* Search icon */}
-        <svg className="w-4 h-4 text-dark-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-dark-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
 
@@ -184,12 +189,20 @@ export function AsyncSelect({
           <input
             ref={inputRef}
             type="text"
+            id={id}
             value={query}
             onChange={handleInputChange}
             onFocus={() => setIsOpen(true)}
             onKeyDown={handleKeyDown}
             placeholder={selectedOption ? selectedOption.label : placeholder}
             disabled={disabled}
+            aria-label={ariaLabel || placeholder}
+            aria-expanded={isOpen}
+            aria-haspopup="listbox"
+            aria-controls={isOpen ? listboxId : undefined}
+            aria-activedescendant={highlightedIndex >= 0 ? `option-${highlightedIndex}` : undefined}
+            aria-autocomplete="list"
+            role="combobox"
             className="flex-1 bg-transparent outline-none text-dark-800 dark:text-white placeholder-dark-400 dark:placeholder-dark-500"
           />
         ) : (
@@ -217,8 +230,9 @@ export function AsyncSelect({
             type="button"
             onClick={handleClear}
             className="p-1 hover:bg-dark-100 dark:hover:bg-dark-600 rounded"
+            aria-label="Clear selection"
           >
-            <svg className="w-4 h-4 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -230,6 +244,7 @@ export function AsyncSelect({
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
@@ -255,10 +270,13 @@ export function AsyncSelect({
               No results found for &quot;{query}&quot;
             </div>
           ) : (
-            <ul>
+            <ul role="listbox" id={listboxId} aria-label="Search results">
               {options.map((option, index) => (
                 <li
                   key={option.value}
+                  id={`option-${index}`}
+                  role="option"
+                  aria-selected={highlightedIndex === index}
                   onClick={() => handleSelect(option)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   className={`px-4 py-3 cursor-pointer border-b border-dark-100 dark:border-dark-700
