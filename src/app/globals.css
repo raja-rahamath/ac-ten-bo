@@ -507,19 +507,19 @@ body {
 
 /* Sidebar styles */
 .sidebar {
-  @apply fixed left-0 top-0 h-screen bg-dark-900 text-white transition-all duration-300;
+  @apply fixed left-0 top-0 h-screen bg-white dark:bg-dark-900 text-dark-800 dark:text-white transition-all duration-300;
 }
 
 .sidebar-link {
-  @apply flex items-center gap-3 px-4 py-3 rounded-xl text-dark-300 transition-all duration-200;
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl text-dark-600 dark:text-dark-300 transition-all duration-200;
 }
 
 .sidebar-link:hover {
-  @apply bg-white/10 text-white;
+  @apply bg-dark-100 dark:bg-white/10 text-dark-900 dark:text-white;
 }
 
 .sidebar-link.active {
-  @apply bg-gradient-to-r from-primary-500/20 to-primary-600/20 text-primary-400;
+  @apply bg-gradient-to-r from-primary-500/20 to-primary-600/20 text-primary-500 dark:text-primary-400;
 }
 
 /* Animation utilities */

@@ -13,9 +13,19 @@ export default function GovernoratesPage() {
         { key: 'name', label: 'Name' },
         { key: 'nameAr', label: 'Name (Arabic)' },
         {
-          key: 'country',
+          key: 'districtName',
+          label: 'District',
+          render: (_value, item) => item.district?.name || '-',
+        },
+        {
+          key: 'stateName',
+          label: 'State',
+          render: (_value, item) => item.district?.state?.name || '-',
+        },
+        {
+          key: 'countryName',
           label: 'Country',
-          render: (value) => value?.name || '-',
+          render: (_value, item) => item.district?.state?.country?.name || '-',
         },
         {
           key: 'isActive',
@@ -30,10 +40,39 @@ export default function GovernoratesPage() {
         },
       ]}
       fields={[
-        { key: 'code', label: 'Code', type: 'text', required: true, placeholder: 'e.g., CAP' },
         { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'Governorate name' },
         { key: 'nameAr', label: 'Name (Arabic)', type: 'text', placeholder: 'اسم المحافظة' },
-        { key: 'countryId', label: 'Country', type: 'text', placeholder: 'Country ID' },
+        { key: 'code', label: 'Code', type: 'text', placeholder: 'e.g., CAP' },
+        // Country dropdown (filter only - not sent to API)
+        {
+          key: 'countryId',
+          label: 'Country',
+          type: 'select',
+          optionsEndpoint: '/countries',
+          isFilterOnly: true,
+          filterFromParent: 'district.state.country.id', // Used when editing
+        },
+        // State dropdown (depends on country, filter only)
+        {
+          key: 'stateId',
+          label: 'State',
+          type: 'select',
+          optionsEndpoint: '/states',
+          dependsOn: 'countryId',
+          filterKey: 'countryId',
+          isFilterOnly: true,
+          filterFromParent: 'district.state.id', // Used when editing
+        },
+        // District dropdown (depends on state)
+        {
+          key: 'districtId',
+          label: 'District',
+          type: 'select',
+          required: true,
+          optionsEndpoint: '/districts',
+          dependsOn: 'stateId',
+          filterKey: 'stateId',
+        },
         { key: 'isActive', label: 'Active', type: 'checkbox', placeholder: 'Is this governorate active?' },
       ]}
       searchPlaceholder="Search governorates..."

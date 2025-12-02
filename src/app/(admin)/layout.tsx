@@ -414,29 +414,29 @@ export default function AdminLayout({
 
   // Grouped navigation structure
   const navGroups = [
-    { href: '/dashboard', label: 'Dashboard', icon: Icons.dashboard },
+    { href: '/dashboard', label: 'Dashboard', labelAr: 'لوحة التحكم', icon: Icons.dashboard },
     {
       id: 'operations',
       label: 'Operations',
       labelAr: 'العمليات',
       icon: Icons.requests,
       children: [
-        { href: '/requests', label: 'Service Requests', icon: Icons.requests },
-        { href: '/amc', label: 'AMC Contracts', icon: Icons.amc },
+        { href: '/requests', label: 'Service Requests', labelAr: 'طلبات الخدمة', icon: Icons.requests },
+        { href: '/amc', label: 'AMC Contracts', labelAr: 'عقود الصيانة السنوية', icon: Icons.amc },
       ],
     },
-    { href: '/customers', label: 'Customers', icon: Icons.customers },
+    { href: '/customers', label: 'Customers', labelAr: 'العملاء', icon: Icons.customers },
     {
       id: 'property',
       label: 'Property',
       labelAr: 'العقارات',
       icon: Icons.properties,
       children: [
-        { href: '/properties', label: 'Properties', icon: Icons.properties },
-        { href: '/buildings', label: 'Buildings', icon: iconMap.building },
-        { href: '/units', label: 'Units', icon: iconMap.unit },
-        { href: '/rooms', label: 'Rooms', icon: iconMap.room },
-        { href: '/assets', label: 'Assets', icon: iconMap.asset },
+        { href: '/properties', label: 'Properties', labelAr: 'العقارات', icon: Icons.properties },
+        { href: '/buildings', label: 'Buildings', labelAr: 'المباني', icon: iconMap.building },
+        { href: '/units', label: 'Units', labelAr: 'الوحدات', icon: iconMap.unit },
+        { href: '/rooms', label: 'Rooms', labelAr: 'الغرف', icon: iconMap.room },
+        { href: '/assets', label: 'Assets', labelAr: 'الأصول', icon: iconMap.asset },
       ],
     },
     {
@@ -445,10 +445,10 @@ export default function AdminLayout({
       labelAr: 'المبيعات والفواتير',
       icon: Icons.invoices,
       children: [
-        { href: '/quotes', label: 'Quotes', icon: Icons.quotes },
-        { href: '/invoices', label: 'Invoices', icon: Icons.invoices },
-        { href: '/collections', label: 'Collections', icon: iconMap.collections },
-        { href: '/receipts', label: 'Receipts', icon: Icons.receipts },
+        { href: '/quotes', label: 'Quotes', labelAr: 'عروض الأسعار', icon: Icons.quotes },
+        { href: '/invoices', label: 'Invoices', labelAr: 'الفواتير', icon: Icons.invoices },
+        { href: '/collections', label: 'Collections', labelAr: 'التحصيلات', icon: iconMap.collections },
+        { href: '/receipts', label: 'Receipts', labelAr: 'الإيصالات', icon: Icons.receipts },
       ],
     },
     {
@@ -457,31 +457,31 @@ export default function AdminLayout({
       labelAr: 'الموارد البشرية',
       icon: Icons.employees,
       children: [
-        { href: '/employees', label: 'Employees', icon: Icons.employees },
-        { href: '/leaves', label: 'Leave Management', icon: iconMap.calendar },
+        { href: '/employees', label: 'Employees', labelAr: 'الموظفين', icon: Icons.employees },
+        { href: '/leaves', label: 'Leave Management', labelAr: 'إدارة الإجازات', icon: iconMap.calendar },
       ],
     },
-    { href: '/reports', label: 'Reports', icon: Icons.reports },
+    { href: '/reports', label: 'Reports', labelAr: 'التقارير', icon: Icons.reports },
     {
       id: 'reference',
       label: 'Reference Data',
       labelAr: 'البيانات المرجعية',
       icon: iconMap.database,
       children: [
-        { href: '/reference/zones', label: 'Zones', icon: iconMap.zone },
-        { href: '/reference/blocks', label: 'Blocks', icon: iconMap.block },
-        { href: '/reference/roads', label: 'Roads', icon: iconMap.road },
-        { href: '/reference/countries', label: 'Countries', icon: iconMap.globe },
-        { href: '/reference/states', label: 'States', icon: iconMap.state },
-        { href: '/reference/districts', label: 'Districts', icon: iconMap.district },
-        { href: '/reference/governorates', label: 'Governorates', icon: iconMap.governorate },
-        { href: '/reference/job-titles', label: 'Job Titles', icon: iconMap.jobTitle },
-        { href: '/reference/property-types', label: 'Property Types', icon: iconMap.propertyType },
-        { href: '/reference/building-types', label: 'Building Types', icon: iconMap.buildingType },
-        { href: '/reference/unit-types', label: 'Unit Types', icon: iconMap.unitType },
-        { href: '/reference/room-types', label: 'Room Types', icon: iconMap.roomType },
-        { href: '/reference/asset-types', label: 'Asset Types', icon: iconMap.assetType },
-        { href: '/reference/complaint-types', label: 'Complaint Types', icon: iconMap.complaintType },
+        { href: '/reference/zones', label: 'Zones', labelAr: 'المناطق', icon: iconMap.zone },
+        { href: '/reference/blocks', label: 'Blocks', labelAr: 'الكتل', icon: iconMap.block },
+        { href: '/reference/roads', label: 'Roads', labelAr: 'الطرق', icon: iconMap.road },
+        { href: '/reference/countries', label: 'Countries', labelAr: 'الدول', icon: iconMap.globe },
+        { href: '/reference/states', label: 'States', labelAr: 'الولايات', icon: iconMap.state },
+        { href: '/reference/districts', label: 'Districts', labelAr: 'الأحياء', icon: iconMap.district },
+        { href: '/reference/governorates', label: 'Governorates', labelAr: 'المحافظات', icon: iconMap.governorate },
+        { href: '/reference/job-titles', label: 'Job Titles', labelAr: 'المسميات الوظيفية', icon: iconMap.jobTitle },
+        { href: '/reference/property-types', label: 'Property Types', labelAr: 'أنواع العقارات', icon: iconMap.propertyType },
+        { href: '/reference/building-types', label: 'Building Types', labelAr: 'أنواع المباني', icon: iconMap.buildingType },
+        { href: '/reference/unit-types', label: 'Unit Types', labelAr: 'أنواع الوحدات', icon: iconMap.unitType },
+        { href: '/reference/room-types', label: 'Room Types', labelAr: 'أنواع الغرف', icon: iconMap.roomType },
+        { href: '/reference/asset-types', label: 'Asset Types', labelAr: 'أنواع الأصول', icon: iconMap.assetType },
+        { href: '/reference/complaint-types', label: 'Complaint Types', labelAr: 'أنواع الشكاوى', icon: iconMap.complaintType },
       ],
     },
     {
@@ -490,10 +490,10 @@ export default function AdminLayout({
       labelAr: 'الإدارة',
       icon: iconMap.admin,
       children: [
-        { href: '/admin/users', label: 'Users', icon: iconMap.users },
-        { href: '/admin/roles', label: 'Roles', icon: iconMap.roles },
-        { href: '/admin/role-menus', label: 'Role Menu Mapping', icon: iconMap.roleMenu },
-        { href: '/admin/settings', label: 'Settings', icon: Icons.settings },
+        { href: '/admin/users', label: 'Users', labelAr: 'المستخدمين', icon: iconMap.users },
+        { href: '/admin/roles', label: 'Roles', labelAr: 'الأدوار', icon: iconMap.roles },
+        { href: '/admin/role-menus', label: 'Role Menu Mapping', labelAr: 'ربط القوائم بالأدوار', icon: iconMap.roleMenu },
+        { href: '/admin/settings', label: 'Settings', labelAr: 'الإعدادات', icon: Icons.settings },
       ],
     },
   ];
@@ -546,7 +546,7 @@ export default function AdminLayout({
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-50 h-screen bg-dark-900 transition-all duration-300 ease-in-out
+        className={`fixed left-0 top-0 z-50 h-screen bg-white dark:bg-dark-900 border-r border-dark-200 dark:border-dark-700 transition-all duration-300 ease-in-out
           ${isSidebarOpen ? 'md:w-64' : 'md:w-20'}
           ${isMobileSidebarOpen ? 'w-64 translate-x-0' : '-translate-x-full md:translate-x-0'}
           md:z-40
@@ -554,15 +554,15 @@ export default function AdminLayout({
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center justify-between px-4 border-b border-dark-700">
+          <div className="flex h-16 items-center justify-between px-4 border-b border-dark-200 dark:border-dark-700">
             {isSidebarOpen ? (
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-400 to-accent-purple flex items-center justify-center">
                   <span className="text-white font-bold text-sm">A</span>
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-white">AgentCare</h1>
-                  <p className="text-[10px] text-dark-400 -mt-0.5">Back Office</p>
+                  <h1 className="text-lg font-bold text-dark-800 dark:text-white">AgentCare</h1>
+                  <p className="text-[10px] text-dark-500 dark:text-dark-400 -mt-0.5">Back Office</p>
                 </div>
               </div>
             ) : (
@@ -580,7 +580,7 @@ export default function AdminLayout({
                   setIsSidebarOpen(!isSidebarOpen);
                 }
               }}
-              className="p-1.5 rounded-lg hover:bg-dark-700 text-dark-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 text-dark-500 dark:text-dark-400 hover:text-dark-800 dark:hover:text-white transition-colors"
             >
               {isSidebarOpen ? Icons.close : Icons.menu}
             </button>
@@ -622,7 +622,7 @@ export default function AdminLayout({
                       </button>
                       {/* Children */}
                       {isSidebarOpen && expandedGroups.includes(item.id) && (
-                        <ul className="mt-1 ml-4 space-y-1 border-l border-dark-700 pl-3">
+                        <ul className="mt-1 ml-4 space-y-1 border-l border-dark-200 dark:border-dark-700 pl-3">
                           {item.children.map((child: any) => (
                             <li key={child.href}>
                               <Link
@@ -633,7 +633,9 @@ export default function AdminLayout({
                                 <span className={`w-4 h-4 ${isActive(child.href) ? 'text-primary-400' : ''}`}>
                                   {child.icon}
                                 </span>
-                                <span className="font-medium">{child.label}</span>
+                                <span className="font-medium">
+                                  {language === 'ar' && child.labelAr ? child.labelAr : child.label}
+                                </span>
                                 {isActive(child.href) && (
                                   <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-400" />
                                 )}
@@ -648,14 +650,16 @@ export default function AdminLayout({
                     <Link
                       href={item.href}
                       className={`sidebar-link ${isActive(item.href) ? 'active' : ''}`}
-                      title={!isSidebarOpen ? item.label : undefined}
+                      title={!isSidebarOpen ? (language === 'ar' && item.labelAr ? item.labelAr : item.label) : undefined}
                       onClick={() => setIsMobileSidebarOpen(false)}
                     >
                       <span className={isActive(item.href) ? 'text-primary-400' : ''}>
                         {item.icon}
                       </span>
                       {isSidebarOpen && (
-                        <span className="font-medium">{item.label}</span>
+                        <span className="font-medium">
+                          {language === 'ar' && item.labelAr ? item.labelAr : item.label}
+                        </span>
                       )}
                       {isActive(item.href) && isSidebarOpen && (
                         <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-400" />
@@ -668,16 +672,16 @@ export default function AdminLayout({
           </nav>
 
           {/* Logout only in sidebar */}
-          <div className="border-t border-dark-700 p-4">
+          <div className="border-t border-dark-200 dark:border-dark-700 p-4">
             <button
               onClick={handleLogout}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-dark-300 hover:bg-red-500/10 hover:text-red-400 transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-dark-600 dark:text-dark-300 hover:bg-red-500/10 hover:text-red-400 transition-colors ${
                 !isSidebarOpen ? 'justify-center' : ''
               }`}
               title={!isSidebarOpen ? 'Sign out' : undefined}
             >
               {Icons.logout}
-              {isSidebarOpen && <span className="font-medium">Sign out</span>}
+              {isSidebarOpen && <span className="font-medium">{t('sign-out')}</span>}
             </button>
           </div>
         </div>

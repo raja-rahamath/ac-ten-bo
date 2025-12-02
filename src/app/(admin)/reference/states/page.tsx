@@ -33,7 +33,7 @@ export default function StatesPage() {
         { key: 'code', label: 'Code', type: 'text', required: true, placeholder: 'e.g., CAP' },
         { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'State name' },
         { key: 'nameAr', label: 'Name (Arabic)', type: 'text', placeholder: 'اسم الولاية' },
-        { key: 'countryId', label: 'Country', type: 'text', placeholder: 'Country ID' },
+        { key: 'countryId', label: 'Country', type: 'select', required: true, optionsEndpoint: '/countries' },
         { key: 'isActive', label: 'Active', type: 'checkbox', placeholder: 'Is this state active?' },
       ]}
       searchPlaceholder="Search states..."

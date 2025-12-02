@@ -13,9 +13,14 @@ export default function DistrictsPage() {
         { key: 'name', label: 'Name' },
         { key: 'nameAr', label: 'Name (Arabic)' },
         {
-          key: 'state',
+          key: 'stateName',
           label: 'State',
-          render: (value) => value?.name || '-',
+          render: (_value, item) => item.state?.name || '-',
+        },
+        {
+          key: 'countryName',
+          label: 'Country',
+          render: (_value, item) => item.state?.country?.name || '-',
         },
         {
           key: 'isActive',
@@ -33,7 +38,25 @@ export default function DistrictsPage() {
         { key: 'code', label: 'Code', type: 'text', required: true, placeholder: 'e.g., D001' },
         { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'District name' },
         { key: 'nameAr', label: 'Name (Arabic)', type: 'text', placeholder: 'اسم المديرية' },
-        { key: 'stateId', label: 'State', type: 'text', placeholder: 'State ID' },
+        // Country dropdown (filter only - not sent to API)
+        {
+          key: 'countryId',
+          label: 'Country',
+          type: 'select',
+          optionsEndpoint: '/countries',
+          isFilterOnly: true,
+          filterFromParent: 'state.countryId', // Used when editing to get country from state
+        },
+        // State dropdown (depends on country)
+        {
+          key: 'stateId',
+          label: 'State',
+          type: 'select',
+          required: true,
+          optionsEndpoint: '/states',
+          dependsOn: 'countryId',
+          filterKey: 'countryId',
+        },
         { key: 'isActive', label: 'Active', type: 'checkbox', placeholder: 'Is this district active?' },
       ]}
       searchPlaceholder="Search districts..."
