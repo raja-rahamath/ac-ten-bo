@@ -13,9 +13,11 @@ interface ServiceRequest {
   status: string;
   priority: string;
   createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
   customer?: { firstName: string; lastName: string };
   complaintType?: { name: string };
-  assignedEmployee?: { firstName: string; lastName: string };
+  assignedTo?: { id: string; firstName: string; lastName: string };
   zone?: { id: string; name: string };
 }
 
@@ -81,6 +83,39 @@ export default function RequestsPage() {
     return colors[priority] || 'text-gray-600 dark:text-gray-400';
   }
 
+  // Format date as dd/mm/yyyy hh:mm AM/PM
+  function formatDateTime(dateString: string): string {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = (hours % 12 || 12).toString().padStart(2, '0');
+    return `${day}/${month}/${year} ${displayHours}:${minutes} ${ampm}`;
+  }
+
+  // Calculate duration between two dates
+  function calculateDuration(startDate: string, endDate?: string): string {
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date();
+    const diffMs = end.getTime() - start.getTime();
+
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+
+    if (days > 0) {
+      return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+    }
+    if (hours > 0) {
+      return `${hours}h`;
+    }
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    return `${minutes}m`;
+  }
+
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
@@ -129,7 +164,7 @@ export default function RequestsPage() {
                     <th className="px-6 py-4 font-medium">Priority</th>
                     <th className="px-6 py-4 font-medium">Status</th>
                     <th className="px-6 py-4 font-medium">Assigned To</th>
-                    <th className="px-6 py-4 font-medium">Date</th>
+                    <th className="px-6 py-4 font-medium">Created Date</th>
                     <th className="px-6 py-4 font-medium">Actions</th>
                   </tr>
                 </thead>
@@ -157,12 +192,12 @@ export default function RequestsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-dark-600 dark:text-dark-400">
-                        {request.assignedEmployee
-                          ? `${request.assignedEmployee.firstName} ${request.assignedEmployee.lastName}`
+                        {request.assignedTo
+                          ? `${request.assignedTo.firstName} ${request.assignedTo.lastName}`
                           : '-'}
                       </td>
-                      <td className="px-6 py-4 text-dark-500 dark:text-dark-400">
-                        {new Date(request.createdAt).toLocaleDateString()}
+                      <td className="px-6 py-4 text-dark-500 dark:text-dark-400 whitespace-nowrap">
+                        {formatDateTime(request.createdAt)}
                       </td>
                       <td className="px-6 py-4">
                         <Link href={`/requests/${request.id}`} className="text-primary-600 dark:text-primary-400 hover:underline">

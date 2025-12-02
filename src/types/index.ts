@@ -488,3 +488,66 @@ export interface ChatResponse {
     };
   };
 }
+
+// Comment types
+export type CommentType =
+  | 'INTERNAL_NOTE'
+  | 'CUSTOMER_CALL'
+  | 'CUSTOMER_CALLED'
+  | 'EMAIL_SENT'
+  | 'EMAIL_RECEIVED'
+  | 'SMS_SENT'
+  | 'SMS_RECEIVED'
+  | 'WHATSAPP'
+  | 'CUSTOMER_MESSAGE'
+  | 'SITE_VISIT_NOTE'
+  | 'SCHEDULING_NOTE';
+
+export type ContactMethod = 'PHONE' | 'EMAIL' | 'IN_PERSON' | 'WHATSAPP';
+
+export interface ServiceRequestComment {
+  id: string;
+  serviceRequestId: string;
+  content: string;
+  commentType: CommentType;
+  isInternal: boolean;
+  isCustomerAuthor: boolean;
+  contactMethod?: ContactMethod;
+  contactNumber?: string;
+  contactDuration?: number;
+  contactedAt?: string;
+  preferredDate?: string;
+  preferredTime?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+export interface CreateCommentInput {
+  serviceRequestId: string;
+  content: string;
+  commentType?: CommentType;
+  isInternal?: boolean;
+  isCustomerAuthor?: boolean;
+  contactMethod?: ContactMethod;
+  contactNumber?: string;
+  contactDuration?: number;
+  contactedAt?: string;
+  preferredDate?: string;
+  preferredTime?: string;
+}
+
+export interface AddCallCommentInput {
+  serviceRequestId: string;
+  content: string;
+  direction?: 'OUTBOUND' | 'INBOUND';
+  contactNumber?: string;
+  contactDuration?: number;
+  contactedAt?: string;
+  preferredDate?: string;
+  preferredTime?: string;
+}

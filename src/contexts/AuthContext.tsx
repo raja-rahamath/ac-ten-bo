@@ -4,10 +4,24 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { useRouter } from 'next/navigation';
 import type { User, MenuItem, UserZone } from '@/types';
 
+interface CompanyInfo {
+  id: string;
+  name: string;
+  nameAr?: string;
+  logo?: string;
+  email?: string;
+  phone?: string;
+  fax?: string;
+  website?: string;
+  address?: string;
+  plusCode?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   menuItems: MenuItem[];
   userZones: UserZone[];
+  companyInfo: CompanyInfo | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   isTechnician: boolean;
@@ -15,6 +29,7 @@ interface AuthContextType {
   logout: () => void;
   handleAuthError: () => void;
   refreshMenuItems: () => Promise<void>;
+  refreshCompanyInfo: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [userZones, setUserZones] = useState<UserZone[]>([]);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const logout = useCallback(() => {
@@ -45,9 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user');
     localStorage.removeItem('menuItems');
     localStorage.removeItem('userZones');
+    localStorage.removeItem('companyInfo');
     setUser(null);
     setMenuItems([]);
     setUserZones([]);
+    setCompanyInfo(null);
     router.push('/login');
   }, [router]);
 
@@ -99,10 +117,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Fetch primary company info from API
+  // Uses /companies/primary endpoint which returns primary company or fallback to first by name
+  const fetchCompanyInfo = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+
+      const response = await fetch('http://localhost:4001/api/v1/companies/primary', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          const company = data.data;
+          const info: CompanyInfo = {
+            id: company.id,
+            name: company.name,
+            nameAr: company.nameAr,
+            logo: company.logo,
+            email: company.email,
+            phone: company.phone,
+            fax: company.fax,
+            website: company.website,
+            address: company.address,
+            plusCode: company.plusCode,
+          };
+          setCompanyInfo(info);
+          localStorage.setItem('companyInfo', JSON.stringify(info));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch company info:', error);
+    }
+  }, []);
+
   const refreshMenuItems = useCallback(async () => {
     await fetchMenuItems();
     await fetchUserZones();
   }, [fetchMenuItems, fetchUserZones]);
+
+  const refreshCompanyInfo = useCallback(async () => {
+    await fetchCompanyInfo();
+  }, [fetchCompanyInfo]);
 
   // Subscribe to auth errors from API client
   useEffect(() => {
@@ -119,22 +177,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = localStorage.getItem('user');
       const storedMenuItems = localStorage.getItem('menuItems');
       const storedUserZones = localStorage.getItem('userZones');
+      const storedCompanyInfo = localStorage.getItem('companyInfo');
 
       if (token && userData) {
         try {
           setUser(JSON.parse(userData));
 
-          // Load cached menu items and zones
+          // Load cached menu items, zones, and company info
           if (storedMenuItems) {
             setMenuItems(JSON.parse(storedMenuItems));
           }
           if (storedUserZones) {
             setUserZones(JSON.parse(storedUserZones));
           }
+          if (storedCompanyInfo) {
+            setCompanyInfo(JSON.parse(storedCompanyInfo));
+          }
 
           // Refresh from API in background
           fetchMenuItems();
           fetchUserZones();
+          fetchCompanyInfo();
         } catch {
           logout();
         }
@@ -143,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initAuth();
-  }, [logout, fetchMenuItems, fetchUserZones]);
+  }, [logout, fetchMenuItems, fetchUserZones, fetchCompanyInfo]);
 
   const login = useCallback(async (accessToken: string, refreshToken: string, userData: User) => {
     localStorage.setItem('accessToken', accessToken);
@@ -151,10 +214,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
 
-    // Fetch menu items and zones after login
+    // Fetch menu items, zones, and company info after login
     await fetchMenuItems();
     await fetchUserZones();
-  }, [fetchMenuItems, fetchUserZones]);
+    await fetchCompanyInfo();
+  }, [fetchMenuItems, fetchUserZones, fetchCompanyInfo]);
 
   // Check if user is a technician
   const isTechnician = user?.role?.name === 'technician';
@@ -163,6 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     menuItems,
     userZones,
+    companyInfo,
     isLoading,
     isAuthenticated: !!user,
     isTechnician,
@@ -170,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     handleAuthError,
     refreshMenuItems,
+    refreshCompanyInfo,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

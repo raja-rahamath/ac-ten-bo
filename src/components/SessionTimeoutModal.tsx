@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
 
+// Idle timeout: 5 minutes (300000 ms)
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 // Show warning 60 seconds before expiry
 const WARNING_BEFORE_EXPIRY_MS = 60 * 1000;
 // Countdown duration in seconds
@@ -45,6 +47,8 @@ export function SessionTimeoutModal() {
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const logoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const idleWarningTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const clearAllTimers = useCallback(() => {
     if (warningTimerRef.current) {
@@ -58,6 +62,14 @@ export function SessionTimeoutModal() {
     if (logoutTimerRef.current) {
       clearTimeout(logoutTimerRef.current);
       logoutTimerRef.current = null;
+    }
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+    if (idleWarningTimerRef.current) {
+      clearTimeout(idleWarningTimerRef.current);
+      idleWarningTimerRef.current = null;
     }
   }, []);
 
@@ -95,6 +107,64 @@ export function SessionTimeoutModal() {
       setCountdown(COUNTDOWN_SECONDS);
     }, timeUntilWarning);
   }, [clearAllTimers, handleLogout]);
+
+  // Reset idle timer on user activity
+  const resetIdleTimer = useCallback(() => {
+    // Don't reset if warning is already showing
+    if (showWarning) return;
+
+    // Clear existing idle timers
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    if (idleWarningTimerRef.current) {
+      clearTimeout(idleWarningTimerRef.current);
+    }
+
+    // Set timer to show warning after idle timeout minus warning time
+    const warningTime = IDLE_TIMEOUT_MS - (COUNTDOWN_SECONDS * 1000);
+    idleWarningTimerRef.current = setTimeout(() => {
+      setShowWarning(true);
+      setCountdown(COUNTDOWN_SECONDS);
+    }, warningTime);
+
+    // Set timer to logout after full idle timeout (backup)
+    idleTimerRef.current = setTimeout(() => {
+      handleLogout();
+    }, IDLE_TIMEOUT_MS);
+  }, [showWarning, handleLogout]);
+
+  // Setup idle detection event listeners
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+
+    const handleActivity = () => {
+      resetIdleTimer();
+    };
+
+    // Start idle timer
+    resetIdleTimer();
+
+    // Add event listeners
+    events.forEach((event) => {
+      document.addEventListener(event, handleActivity);
+    });
+
+    // Cleanup
+    return () => {
+      events.forEach((event) => {
+        document.removeEventListener(event, handleActivity);
+      });
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
+      if (idleWarningTimerRef.current) {
+        clearTimeout(idleWarningTimerRef.current);
+      }
+    };
+  }, [isAuthenticated, resetIdleTimer]);
 
   // Start countdown when warning is shown
   useEffect(() => {
@@ -175,6 +245,21 @@ export function SessionTimeoutModal() {
 
         // Setup new timers with refreshed token
         setupTimers();
+
+        // Reset idle timer after successful refresh
+        // Use setTimeout to ensure showWarning is false before resetting
+        setTimeout(() => {
+          if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+          if (idleWarningTimerRef.current) clearTimeout(idleWarningTimerRef.current);
+          const warningTime = IDLE_TIMEOUT_MS - (COUNTDOWN_SECONDS * 1000);
+          idleWarningTimerRef.current = setTimeout(() => {
+            setShowWarning(true);
+            setCountdown(COUNTDOWN_SECONDS);
+          }, warningTime);
+          idleTimerRef.current = setTimeout(() => {
+            handleLogout();
+          }, IDLE_TIMEOUT_MS);
+        }, 100);
       } else {
         handleLogout();
       }

@@ -478,7 +478,7 @@ export default function PropertiesPage() {
                         >
                           <td className="px-6 py-4">
                             <span className="text-dark-800 dark:text-white">
-                              {property.flatNumber && `Flat ${property.flatNumber}, `}
+                              {property.type === 'unit' && property.flatNumber && `Flat ${property.flatNumber}, `}
                               Building {property.buildingNumber}, Road {property.roadNumber}, Block {property.blockNumber}
                               {property.zoneName && `, ${property.zoneName}`}
                             </span>
@@ -693,10 +693,7 @@ export default function PropertiesPage() {
       {/* Add Building Modal */}
       {showAddBuilding && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowAddBuilding(false)}
-          />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white dark:bg-dark-800 px-6 py-4 border-b border-dark-100 dark:border-dark-700">
               <h3 className="text-lg font-semibold text-dark-800 dark:text-white">
@@ -941,13 +938,7 @@ export default function PropertiesPage() {
       {/* Bulk Create Units Modal */}
       {showBulkUnits && selectedBuilding && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => {
-              setShowBulkUnits(false);
-              setSelectedBuilding(null);
-            }}
-          />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-md mx-4">
             <div className="px-6 py-4 border-b border-dark-100 dark:border-dark-700">
               <h3 className="text-lg font-semibold text-dark-800 dark:text-white">

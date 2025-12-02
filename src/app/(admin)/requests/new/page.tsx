@@ -151,7 +151,7 @@ export default function NewRequestPage() {
 
       if (typesRes) {
         const typesData = await typesRes.json();
-        if (typesData.success) {
+        if (typesData.success && typesData.data) {
           setComplaintTypes(typesData.data);
         }
       }
@@ -169,14 +169,6 @@ export default function NewRequestPage() {
         if (governoratesData.success) {
           setGovernorates(governoratesData.data);
         }
-      }
-
-      if (complaintTypes.length === 0) {
-        setComplaintTypes([
-          { id: 'cmig5s2o7000vx4l3nm9n6umz', name: 'Plumbing' },
-          { id: 'cmig5s2o7000xx4l39b7mvagf', name: 'AC Maintenance' },
-          { id: 'cmig5s2o7000yx4l3t4qh7ijr', name: 'Electrical' },
-        ]);
       }
     } catch (error) {
       console.error('Failed to fetch dropdown data:', error);

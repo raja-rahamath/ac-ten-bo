@@ -140,7 +140,7 @@ export default function AdminLayout({
   const pathname = usePathname();
   const { theme, toggleTheme, colorTheme, setColorTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
-  const { user, isLoading, isAuthenticated, logout, menuItems } = useAuth();
+  const { user, isLoading, isAuthenticated, logout, menuItems, companyInfo } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -148,6 +148,7 @@ export default function AdminLayout({
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isColorThemeOpen, setIsColorThemeOpen] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showCompanyDetails, setShowCompanyDetails] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'sales', 'hr']);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -156,6 +157,7 @@ export default function AdminLayout({
   });
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
@@ -485,6 +487,18 @@ export default function AdminLayout({
       ],
     },
     {
+      id: 'organization',
+      label: 'Organization',
+      labelAr: 'المنظمة',
+      icon: iconMap.building,
+      children: [
+        { href: '/settings/companies', label: 'Companies', labelAr: 'الشركات', icon: iconMap.building },
+        { href: '/settings/divisions', label: 'Divisions', labelAr: 'الأقسام', icon: iconMap.database },
+        { href: '/settings/departments', label: 'Departments', labelAr: 'الإدارات', icon: iconMap.database },
+        { href: '/settings/sections', label: 'Sections', labelAr: 'الأقسام الفرعية', icon: iconMap.database },
+      ],
+    },
+    {
       id: 'admin',
       label: 'Administration',
       labelAr: 'الإدارة',
@@ -705,9 +719,24 @@ export default function AdminLayout({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h2 className="text-lg font-semibold text-dark-800 dark:text-white capitalize">
-              {t(pathname.split('/')[1]) || t('dashboard')}
-            </h2>
+            {/* Company logo and name - Clickable to show details */}
+            {companyInfo && (
+              <button
+                onClick={() => setShowCompanyDetails(true)}
+                className="flex items-center gap-3 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-xl px-2 py-1.5 transition-colors"
+              >
+                {companyInfo.logo && (
+                  <img
+                    src={companyInfo.logo}
+                    alt={companyInfo.name}
+                    className="h-8 w-auto object-contain"
+                  />
+                )}
+                <h2 className="text-lg font-semibold text-dark-800 dark:text-white">
+                  {language === 'ar' && companyInfo.nameAr ? companyInfo.nameAr : companyInfo.name}
+                </h2>
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-4">
             {/* Date */}
@@ -1022,6 +1051,190 @@ export default function AdminLayout({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Company Details Modal */}
+      {showCompanyDetails && companyInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => { setShowCompanyDetails(false); setCopySuccess(false); }}
+          />
+          <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
+            {/* Header with logo */}
+            <div className="bg-gradient-to-r from-primary-500 to-accent-purple p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  {companyInfo.logo ? (
+                    <div className="w-16 h-16 rounded-xl bg-white/20 backdrop-blur p-2 flex items-center justify-center">
+                      <img
+                        src={companyInfo.logo}
+                        alt={companyInfo.name}
+                        className="max-h-12 max-w-12 object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-xl font-bold">{companyInfo.name}</h3>
+                    {companyInfo.nameAr && (
+                      <p className="text-white/80 text-sm" dir="rtl">{companyInfo.nameAr}</p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setShowCompanyDetails(false); setCopySuccess(false); }}
+                  className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  {Icons.close}
+                </button>
+              </div>
+            </div>
+
+            {/* Contact Details - Consolidated View */}
+            <div className="p-6">
+              {(companyInfo.email || companyInfo.phone || companyInfo.fax || companyInfo.website || companyInfo.address || companyInfo.plusCode) ? (
+                <div className="relative">
+                  {/* Copy Button */}
+                  <button
+                    onClick={() => {
+                      const details = [
+                        companyInfo.name,
+                        companyInfo.nameAr,
+                        companyInfo.email && `Email: ${companyInfo.email}`,
+                        companyInfo.phone && `Phone: ${companyInfo.phone}`,
+                        companyInfo.fax && `Fax: ${companyInfo.fax}`,
+                        companyInfo.website && `Website: ${companyInfo.website}`,
+                        companyInfo.address && `Address: ${companyInfo.address}`,
+                        companyInfo.plusCode && `Plus Code: ${companyInfo.plusCode}`,
+                      ].filter(Boolean).join('\n');
+                      navigator.clipboard.writeText(details);
+                      setCopySuccess(true);
+                      setTimeout(() => setCopySuccess(false), 2000);
+                    }}
+                    className={`absolute top-2 right-2 p-2 rounded-lg transition-all ${
+                      copySuccess
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-600'
+                        : 'bg-dark-100 dark:bg-dark-600 text-dark-500 dark:text-dark-400 hover:bg-dark-200 dark:hover:bg-dark-500'
+                    }`}
+                    title={copySuccess ? 'Copied!' : 'Copy all details'}
+                  >
+                    {copySuccess ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    )}
+                  </button>
+
+                  {/* Consolidated Info Card */}
+                  <div className="p-4 rounded-xl bg-dark-50 dark:bg-dark-700 pr-12 space-y-2">
+                    {/* Company Name */}
+                    <p className="font-semibold text-dark-800 dark:text-white text-lg">{companyInfo.name}</p>
+                    {companyInfo.nameAr && (
+                      <p className="text-dark-600 dark:text-dark-300" dir="rtl">{companyInfo.nameAr}</p>
+                    )}
+
+                    {/* Divider */}
+                    <div className="border-t border-dark-200 dark:border-dark-600 my-3"></div>
+
+                    {/* Contact Details */}
+                    <div className="space-y-1.5 text-sm">
+                      {companyInfo.email && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-dark-500 dark:text-dark-400 w-16 shrink-0">Email:</span>
+                          <a href={`mailto:${companyInfo.email}`} className="text-dark-800 dark:text-white hover:text-primary-500">
+                            {companyInfo.email}
+                          </a>
+                        </div>
+                      )}
+                      {companyInfo.phone && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-dark-500 dark:text-dark-400 w-16 shrink-0">Phone:</span>
+                          <a href={`tel:${companyInfo.phone}`} className="text-dark-800 dark:text-white hover:text-primary-500">
+                            {companyInfo.phone}
+                          </a>
+                        </div>
+                      )}
+                      {companyInfo.fax && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-dark-500 dark:text-dark-400 w-16 shrink-0">Fax:</span>
+                          <span className="text-dark-800 dark:text-white">{companyInfo.fax}</span>
+                        </div>
+                      )}
+                      {companyInfo.website && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-dark-500 dark:text-dark-400 w-16 shrink-0">Website:</span>
+                          <a
+                            href={companyInfo.website.startsWith('http') ? companyInfo.website : `https://${companyInfo.website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-dark-800 dark:text-white hover:text-primary-500"
+                          >
+                            {companyInfo.website}
+                          </a>
+                        </div>
+                      )}
+                      {companyInfo.address && (
+                        <div className="flex items-start gap-2">
+                          <span className="text-dark-500 dark:text-dark-400 w-16 shrink-0">Address:</span>
+                          <span className="text-dark-800 dark:text-white whitespace-pre-line">{companyInfo.address}</span>
+                        </div>
+                      )}
+                      {companyInfo.plusCode && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-dark-500 dark:text-dark-400 w-16 shrink-0">Plus Code:</span>
+                          <a
+                            href={`https://plus.codes/${encodeURIComponent(companyInfo.plusCode)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-dark-800 dark:text-white hover:text-primary-500 flex items-center gap-1"
+                          >
+                            {companyInfo.plusCode}
+                            <svg className="w-3.5 h-3.5 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Copy success message */}
+                  {copySuccess && (
+                    <p className="text-green-600 dark:text-green-400 text-sm mt-2 text-center">
+                      Company details copied to clipboard!
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 rounded-2xl bg-dark-100 dark:bg-dark-700 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-dark-500 dark:text-dark-400">No contact information available</p>
+                  <Link
+                    href="/settings/companies"
+                    onClick={() => setShowCompanyDetails(false)}
+                    className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block"
+                  >
+                    Add company details
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

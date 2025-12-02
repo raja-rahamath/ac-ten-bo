@@ -1,21 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { apiService } from '@/lib/api';
-
-interface CompanySettings {
-  name: string;
-  nameAr?: string;
-  email: string;
-  phone: string;
-  address?: string;
-  website?: string;
-  logo?: string;
-  currency: string;
-  timezone: string;
-  dateFormat: string;
-  fiscalYearStart: string;
-}
+import { useState } from 'react';
+import { Button } from '@/components/ui';
 
 interface NotificationSettings {
   emailNotifications: boolean;
@@ -27,25 +13,10 @@ interface NotificationSettings {
 }
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('company');
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('notifications');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
-
-  const [companySettings, setCompanySettings] = useState<CompanySettings>({
-    name: '',
-    nameAr: '',
-    email: '',
-    phone: '',
-    address: '',
-    website: '',
-    logo: '',
-    currency: 'BHD',
-    timezone: 'Asia/Bahrain',
-    dateFormat: 'DD/MM/YYYY',
-    fiscalYearStart: '01-01',
-  });
 
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     emailNotifications: true,
@@ -55,37 +26,6 @@ export default function SettingsPage() {
     invoiceAlerts: true,
     paymentAlerts: true,
   });
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
-      setLoading(true);
-      // Fetch company settings - in real app this would be an API call
-      // For now using mock data
-    } catch (error) {
-      console.error('Error fetching settings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveCompany = async () => {
-    setSaving(true);
-    setError('');
-    setSuccess('');
-    try {
-      // await apiService.put('/settings/company', companySettings);
-      setSuccess('Company settings saved successfully');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error: any) {
-      setError(error.message || 'Failed to save settings');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleSaveNotifications = async () => {
     setSaving(true);
@@ -103,7 +43,6 @@ export default function SettingsPage() {
   };
 
   const tabs = [
-    { id: 'company', label: 'Company', icon: '🏢' },
     { id: 'notifications', label: 'Notifications', icon: '🔔' },
     { id: 'integrations', label: 'Integrations', icon: '🔗' },
     { id: 'backup', label: 'Backup & Data', icon: '💾' },
@@ -146,124 +85,6 @@ export default function SettingsPage() {
       {error && (
         <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
           {error}
-        </div>
-      )}
-
-      {/* Company Settings Tab */}
-      {activeTab === 'company' && (
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-dark-800 dark:text-white mb-6">Company Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
-                Company Name
-              </label>
-              <input
-                type="text"
-                value={companySettings.name}
-                onChange={(e) => setCompanySettings({ ...companySettings, name: e.target.value })}
-                className="input-modern dark:bg-dark-700 dark:border-dark-600"
-                placeholder="Your Company Name"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
-                Company Name (Arabic)
-              </label>
-              <input
-                type="text"
-                value={companySettings.nameAr}
-                onChange={(e) => setCompanySettings({ ...companySettings, nameAr: e.target.value })}
-                className="input-modern dark:bg-dark-700 dark:border-dark-600"
-                placeholder="اسم الشركة"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Email</label>
-              <input
-                type="email"
-                value={companySettings.email}
-                onChange={(e) => setCompanySettings({ ...companySettings, email: e.target.value })}
-                className="input-modern dark:bg-dark-700 dark:border-dark-600"
-                placeholder="info@company.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Phone</label>
-              <input
-                type="tel"
-                value={companySettings.phone}
-                onChange={(e) => setCompanySettings({ ...companySettings, phone: e.target.value })}
-                className="input-modern dark:bg-dark-700 dark:border-dark-600"
-                placeholder="+973 1234 5678"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Website</label>
-              <input
-                type="url"
-                value={companySettings.website}
-                onChange={(e) => setCompanySettings({ ...companySettings, website: e.target.value })}
-                className="input-modern dark:bg-dark-700 dark:border-dark-600"
-                placeholder="https://www.company.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Currency</label>
-              <select
-                value={companySettings.currency}
-                onChange={(e) => setCompanySettings({ ...companySettings, currency: e.target.value })}
-                className="input-modern dark:bg-dark-700 dark:border-dark-600"
-              >
-                <option value="BHD">Bahraini Dinar (BHD)</option>
-                <option value="USD">US Dollar (USD)</option>
-                <option value="SAR">Saudi Riyal (SAR)</option>
-                <option value="AED">UAE Dirham (AED)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Timezone</label>
-              <select
-                value={companySettings.timezone}
-                onChange={(e) => setCompanySettings({ ...companySettings, timezone: e.target.value })}
-                className="input-modern dark:bg-dark-700 dark:border-dark-600"
-              >
-                <option value="Asia/Bahrain">Asia/Bahrain (GMT+3)</option>
-                <option value="Asia/Dubai">Asia/Dubai (GMT+4)</option>
-                <option value="Asia/Riyadh">Asia/Riyadh (GMT+3)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Date Format</label>
-              <select
-                value={companySettings.dateFormat}
-                onChange={(e) => setCompanySettings({ ...companySettings, dateFormat: e.target.value })}
-                className="input-modern dark:bg-dark-700 dark:border-dark-600"
-              >
-                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-              </select>
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Address</label>
-              <textarea
-                value={companySettings.address}
-                onChange={(e) => setCompanySettings({ ...companySettings, address: e.target.value })}
-                className="input-modern dark:bg-dark-700 dark:border-dark-600 min-h-[80px]"
-                placeholder="Company address"
-              />
-            </div>
-          </div>
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={handleSaveCompany}
-              disabled={saving}
-              className="btn-primary"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
         </div>
       )}
 
@@ -357,13 +178,13 @@ export default function SettingsPage() {
             </div>
           </div>
           <div className="mt-6 flex justify-end">
-            <button
+            <Button
               onClick={handleSaveNotifications}
               disabled={saving}
-              className="btn-primary"
+              isLoading={saving}
             >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+              Save Changes
+            </Button>
           </div>
         </div>
       )}
@@ -397,13 +218,12 @@ export default function SettingsPage() {
                   </span>
                 </div>
                 <div className="mt-4">
-                  <button className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    integration.connected
-                      ? 'border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:hover:bg-red-900/20'
-                      : 'bg-primary-500 text-white hover:bg-primary-600'
-                  }`}>
+                  <Button
+                    variant={integration.connected ? 'danger' : 'primary'}
+                    className="w-full"
+                  >
                     {integration.connected ? 'Disconnect' : 'Connect'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -427,12 +247,12 @@ export default function SettingsPage() {
                 </span>
               </div>
               <div className="flex gap-3">
-                <button className="btn-primary">
+                <Button>
                   Create Backup Now
-                </button>
-                <button className="px-4 py-2.5 rounded-xl border border-dark-200 dark:border-dark-600 text-dark-700 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700">
+                </Button>
+                <Button variant="outline">
                   Download Latest Backup
-                </button>
+                </Button>
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ export { customerService } from './customers';
 export { employeeService } from './employees';
 export { invoiceService } from './invoices';
 export { aiChatService } from './ai-chat';
+export { commentService } from './comments';
 
 // Re-export types for convenience
 export type { ServiceRequestFilters, CreateServiceRequestData, UpdateServiceRequestData } from './service-requests';
