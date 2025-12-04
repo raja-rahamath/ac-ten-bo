@@ -21,6 +21,7 @@ const COMMENT_TYPE_LABELS: Record<CommentType, string> = {
   CUSTOMER_MESSAGE: 'Customer Message',
   SITE_VISIT_NOTE: 'Site Visit Note',
   SCHEDULING_NOTE: 'Scheduling Note',
+  SCOPE_OF_WORK: 'Scope of Work',
 };
 
 const COMMENT_TYPE_ICONS: Record<CommentType, string> = {
@@ -35,6 +36,7 @@ const COMMENT_TYPE_ICONS: Record<CommentType, string> = {
   CUSTOMER_MESSAGE: 'M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z',
   SITE_VISIT_NOTE: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z',
   SCHEDULING_NOTE: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+  SCOPE_OF_WORK: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
 };
 
 const COMMENT_TYPE_COLORS: Record<CommentType, string> = {
@@ -49,6 +51,7 @@ const COMMENT_TYPE_COLORS: Record<CommentType, string> = {
   CUSTOMER_MESSAGE: 'bg-cyan-100 text-cyan-600',
   SITE_VISIT_NOTE: 'bg-pink-100 text-pink-600',
   SCHEDULING_NOTE: 'bg-sky-100 text-sky-600',
+  SCOPE_OF_WORK: 'bg-amber-100 text-amber-700',
 };
 
 export function CommentsSection({ serviceRequestId }: CommentsSectionProps) {

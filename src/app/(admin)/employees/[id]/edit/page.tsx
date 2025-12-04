@@ -122,14 +122,20 @@ export default function EditEmployeePage() {
   const [selectedManager, setSelectedManager] = useState('');
   const [selectedZones, setSelectedZones] = useState<string[]>([]);
   const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
+  const [isManagerDropdownOpen, setIsManagerDropdownOpen] = useState(false);
+  const [managerSearch, setManagerSearch] = useState('');
 
   const zoneDropdownRef = useRef<HTMLDivElement>(null);
+  const managerDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close zone dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (zoneDropdownRef.current && !zoneDropdownRef.current.contains(event.target as Node)) {
         setIsZoneDropdownOpen(false);
+      }
+      if (managerDropdownRef.current && !managerDropdownRef.current.contains(event.target as Node)) {
+        setIsManagerDropdownOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -278,13 +284,33 @@ export default function EditEmployeePage() {
     }
   }
 
+  // Job titles that indicate a manager-eligible role
+  const MANAGER_ELIGIBLE_KEYWORDS = [
+    'manager', 'head', 'director', 'supervisor', 'lead', 'chief',
+    'ceo', 'coo', 'cfo', 'cto', 'gm', 'general manager', 'vp', 'president',
+    'coordinator', 'officer', 'executive', 'admin', 'controller', 'specialist'
+  ];
+
+  function isManagerEligible(jobTitle?: string | null): boolean {
+    if (!jobTitle) return false;
+    const title = jobTitle.toLowerCase();
+    // Exclude junior-level positions
+    const juniorKeywords = ['helper', 'technician', 'assistant', 'trainee', 'intern', 'laborer', 'worker', 'operator', 'cleaner'];
+    if (juniorKeywords.some(k => title.includes(k))) return false;
+    // Include if it matches manager-eligible keywords or doesn't match junior keywords
+    return MANAGER_ELIGIBLE_KEYWORDS.some(k => title.includes(k)) || !juniorKeywords.some(k => title.includes(k));
+  }
+
   async function fetchManagers() {
     try {
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/employees?isActive=true&limit=100');
+      const response = await fetchWithAuth('http://localhost:4001/api/v1/employees?isActive=true&limit=500');
       const data = await response.json();
       if (data.success) {
-        // Filter out current employee from managers list
-        setManagers(data.data.filter((m: Manager) => m.id !== params.id));
+        // Filter out current employee and junior-level employees from managers list
+        const eligibleManagers = data.data.filter((m: Manager) =>
+          m.id !== params.id && isManagerEligible(m.jobTitle?.name)
+        );
+        setManagers(eligibleManagers);
       }
     } catch (error) {
       console.error('Failed to fetch managers:', error);
@@ -630,19 +656,107 @@ export default function EditEmployeePage() {
                 <label htmlFor="managerId" className="mb-2 block font-medium text-dark-700 dark:text-dark-300">
                   Reporting Manager
                 </label>
-                <select
-                  id="managerId"
-                  value={selectedManager}
-                  onChange={(e) => setSelectedManager(e.target.value)}
-                  className="w-full rounded-lg border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 p-3 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                >
-                  <option value="">No reporting manager (Top Level)</option>
-                  {managers.map((manager) => (
-                    <option key={manager.id} value={manager.id}>
-                      {manager.firstName} {manager.lastName} ({manager.employeeNo}){manager.jobTitle?.name ? ` - ${manager.jobTitle.name}` : ''}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative" ref={managerDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsManagerDropdownOpen(!isManagerDropdownOpen);
+                      setManagerSearch('');
+                    }}
+                    className="w-full rounded-lg border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 p-3 text-left text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 flex items-center justify-between"
+                  >
+                    <span className={!selectedManager ? 'text-dark-400' : ''}>
+                      {selectedManager
+                        ? (() => {
+                            const manager = managers.find((m) => m.id === selectedManager);
+                            return manager
+                              ? `${manager.firstName} ${manager.lastName} (${manager.employeeNo})${manager.jobTitle?.name ? ` - ${manager.jobTitle.name}` : ''}`
+                              : 'Select manager...';
+                          })()
+                        : 'No reporting manager (Top Level)'}
+                    </span>
+                    <svg
+                      className={`w-5 h-5 text-dark-400 transition-transform ${isManagerDropdownOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {isManagerDropdownOpen && (
+                    <div className="absolute z-10 mt-1 w-full bg-white dark:bg-dark-800 border border-dark-200 dark:border-dark-600 rounded-lg shadow-lg">
+                      <div className="p-2 border-b border-dark-200 dark:border-dark-600">
+                        <input
+                          type="text"
+                          placeholder="Search managers..."
+                          value={managerSearch}
+                          onChange={(e) => setManagerSearch(e.target.value)}
+                          className="w-full rounded border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-3 py-2 text-sm text-dark-800 dark:text-white placeholder-dark-400 focus:border-primary-500 focus:outline-none"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        <div
+                          className="px-3 py-2 hover:bg-dark-50 dark:hover:bg-dark-700 cursor-pointer text-dark-500 dark:text-dark-400 text-sm"
+                          onClick={() => {
+                            setSelectedManager('');
+                            setIsManagerDropdownOpen(false);
+                          }}
+                        >
+                          No reporting manager (Top Level)
+                        </div>
+                        {managers
+                          .filter((manager) => {
+                            if (!managerSearch) return true;
+                            const search = managerSearch.toLowerCase();
+                            return (
+                              manager.firstName.toLowerCase().includes(search) ||
+                              manager.lastName.toLowerCase().includes(search) ||
+                              manager.employeeNo.toLowerCase().includes(search) ||
+                              (manager.jobTitle?.name?.toLowerCase().includes(search) ?? false)
+                            );
+                          })
+                          .map((manager) => (
+                            <div
+                              key={manager.id}
+                              className={`px-3 py-2 hover:bg-dark-50 dark:hover:bg-dark-700 cursor-pointer text-sm ${
+                                selectedManager === manager.id
+                                  ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                                  : 'text-dark-800 dark:text-white'
+                              }`}
+                              onClick={() => {
+                                setSelectedManager(manager.id);
+                                setIsManagerDropdownOpen(false);
+                              }}
+                            >
+                              <div className="font-medium">
+                                {manager.firstName} {manager.lastName} ({manager.employeeNo})
+                              </div>
+                              {manager.jobTitle?.name && (
+                                <div className="text-xs text-dark-500 dark:text-dark-400">{manager.jobTitle.name}</div>
+                              )}
+                            </div>
+                          ))}
+                        {managers.filter((manager) => {
+                          if (!managerSearch) return true;
+                          const search = managerSearch.toLowerCase();
+                          return (
+                            manager.firstName.toLowerCase().includes(search) ||
+                            manager.lastName.toLowerCase().includes(search) ||
+                            manager.employeeNo.toLowerCase().includes(search) ||
+                            (manager.jobTitle?.name?.toLowerCase().includes(search) ?? false)
+                          );
+                        }).length === 0 && (
+                          <div className="p-3 text-dark-500 dark:text-dark-400 text-sm text-center">
+                            No managers found
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

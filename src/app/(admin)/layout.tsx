@@ -149,7 +149,8 @@ export default function AdminLayout({
   const [isColorThemeOpen, setIsColorThemeOpen] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showCompanyDetails, setShowCompanyDetails] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'sales', 'hr']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const [menuSearch, setMenuSearch] = useState('');
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -285,9 +286,19 @@ export default function AdminLayout({
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
     ),
+    orgChart: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+      </svg>
+    ),
     amc: Icons.amc,
     quotes: Icons.quotes,
     receipts: Icons.receipts,
+    estimates: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    ),
     collections: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -391,6 +402,11 @@ export default function AdminLayout({
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
       </svg>
     ),
+    laborRateType: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
     // Administration icons
     admin: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -447,6 +463,7 @@ export default function AdminLayout({
       labelAr: 'المبيعات والفواتير',
       icon: Icons.invoices,
       children: [
+        { href: '/estimates', label: 'Estimates', labelAr: 'التقديرات', icon: iconMap.estimates },
         { href: '/quotes', label: 'Quotes', labelAr: 'عروض الأسعار', icon: Icons.quotes },
         { href: '/invoices', label: 'Invoices', labelAr: 'الفواتير', icon: Icons.invoices },
         { href: '/collections', label: 'Collections', labelAr: 'التحصيلات', icon: iconMap.collections },
@@ -460,6 +477,7 @@ export default function AdminLayout({
       icon: Icons.employees,
       children: [
         { href: '/employees', label: 'Employees', labelAr: 'الموظفين', icon: Icons.employees },
+        { href: '/org-chart', label: 'Organization Chart', labelAr: 'الهيكل التنظيمي', icon: iconMap.orgChart },
         { href: '/leaves', label: 'Leave Management', labelAr: 'إدارة الإجازات', icon: iconMap.calendar },
       ],
     },
@@ -484,6 +502,7 @@ export default function AdminLayout({
         { href: '/reference/room-types', label: 'Room Types', labelAr: 'أنواع الغرف', icon: iconMap.roomType },
         { href: '/reference/asset-types', label: 'Asset Types', labelAr: 'أنواع الأصول', icon: iconMap.assetType },
         { href: '/reference/complaint-types', label: 'Complaint Types', labelAr: 'أنواع الشكاوى', icon: iconMap.complaintType },
+        { href: '/reference/labor-rate-types', label: 'Labor Rate Types', labelAr: 'أنواع أسعار العمالة', icon: iconMap.laborRateType },
       ],
     },
     {
@@ -519,6 +538,55 @@ export default function AdminLayout({
         ? prev.filter(id => id !== groupId)
         : [...prev, groupId]
     );
+  };
+
+  // Expand all groups
+  const expandAllGroups = () => {
+    const allGroupIds = navGroups.filter((g: any) => g.children).map((g: any) => g.id);
+    setExpandedGroups(allGroupIds);
+  };
+
+  // Collapse all groups
+  const collapseAllGroups = () => {
+    setExpandedGroups([]);
+  };
+
+  // Filter menu items based on search
+  const filterMenuItems = (items: any[]) => {
+    if (!menuSearch.trim()) return items;
+
+    const searchLower = menuSearch.toLowerCase();
+    return items.map((item: any) => {
+      const label = (language === 'ar' && item.labelAr ? item.labelAr : item.label).toLowerCase();
+      const parentMatches = label.includes(searchLower);
+
+      if (item.children) {
+        const filteredChildren = item.children.filter((child: any) => {
+          const childLabel = (language === 'ar' && child.labelAr ? child.labelAr : child.label).toLowerCase();
+          return childLabel.includes(searchLower);
+        });
+
+        // Include parent if it matches or if it has matching children
+        if (parentMatches || filteredChildren.length > 0) {
+          return {
+            ...item,
+            children: parentMatches ? item.children : filteredChildren,
+          };
+        }
+        return null;
+      }
+
+      return parentMatches ? item : null;
+    }).filter(Boolean);
+  };
+
+  // Get filtered nav groups
+  const filteredNavGroups = filterMenuItems(navGroups);
+
+  // Auto-expand groups when searching
+  const shouldShowExpanded = (groupId: string) => {
+    if (menuSearch.trim()) return true; // Expand all when searching
+    return expandedGroups.includes(groupId);
   };
 
   // Flatten for legacy compatibility - only used if API returns flat menu items
@@ -601,9 +669,60 @@ export default function AdminLayout({
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto py-6 px-3">
+          <nav className="flex-1 overflow-y-auto py-4 px-3">
+            {/* Search and Expand/Collapse controls */}
+            {isSidebarOpen && (
+              <div className="mb-4 space-y-2">
+                {/* Search Input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={menuSearch}
+                    onChange={(e) => setMenuSearch(e.target.value)}
+                    placeholder={language === 'ar' ? 'بحث في القائمة...' : 'Search menu...'}
+                    className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-dark-100 dark:bg-dark-700 border-0 text-dark-800 dark:text-white placeholder-dark-400 dark:placeholder-dark-500 focus:ring-2 focus:ring-primary-500"
+                  />
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  {menuSearch && (
+                    <button
+                      onClick={() => setMenuSearch('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-dark-200 dark:hover:bg-dark-600"
+                    >
+                      <svg className="w-3 h-3 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {/* Expand/Collapse buttons */}
+                <div className="flex gap-1">
+                  <button
+                    onClick={expandAllGroups}
+                    className="flex-1 px-2 py-1.5 text-xs rounded-lg bg-dark-100 dark:bg-dark-700 text-dark-600 dark:text-dark-400 hover:bg-dark-200 dark:hover:bg-dark-600 transition-colors flex items-center justify-center gap-1"
+                    title={language === 'ar' ? 'توسيع الكل' : 'Expand All'}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    <span>{language === 'ar' ? 'توسيع' : 'Expand'}</span>
+                  </button>
+                  <button
+                    onClick={collapseAllGroups}
+                    className="flex-1 px-2 py-1.5 text-xs rounded-lg bg-dark-100 dark:bg-dark-700 text-dark-600 dark:text-dark-400 hover:bg-dark-200 dark:hover:bg-dark-600 transition-colors flex items-center justify-center gap-1"
+                    title={language === 'ar' ? 'طي الكل' : 'Collapse All'}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                    <span>{language === 'ar' ? 'طي' : 'Collapse'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
             <ul className="space-y-1">
-              {navGroups.map((item: any) => (
+              {filteredNavGroups.map((item: any) => (
                 <li key={item.href || item.id}>
                   {item.children ? (
                     // Group with children
@@ -623,7 +742,7 @@ export default function AdminLayout({
                             </span>
                             <svg
                               className={`w-4 h-4 transition-transform ${
-                                expandedGroups.includes(item.id) ? 'rotate-180' : ''
+                                shouldShowExpanded(item.id) ? 'rotate-180' : ''
                               }`}
                               fill="none"
                               stroke="currentColor"
@@ -635,7 +754,7 @@ export default function AdminLayout({
                         )}
                       </button>
                       {/* Children */}
-                      {isSidebarOpen && expandedGroups.includes(item.id) && (
+                      {isSidebarOpen && shouldShowExpanded(item.id) && (
                         <ul className="mt-1 ml-4 space-y-1 border-l border-dark-200 dark:border-dark-700 pl-3">
                           {item.children.map((child: any) => (
                             <li key={child.href}>

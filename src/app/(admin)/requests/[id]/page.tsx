@@ -101,6 +101,21 @@ interface ActionTemplate {
   descriptionAr?: string;
 }
 
+interface Estimate {
+  id: string;
+  estimateNo: string;
+  title: string;
+  version: number;
+  status: string;
+  total: string;
+  createdAt: string;
+  isLatestVersion: boolean;
+  createdBy?: {
+    firstName: string;
+    lastName: string;
+  };
+}
+
 export default function RequestDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -166,8 +181,13 @@ export default function RequestDetailPage() {
   } | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
 
+  // Estimates state
+  const [estimates, setEstimates] = useState<Estimate[]>([]);
+  const [loadingEstimates, setLoadingEstimates] = useState(false);
+
   useEffect(() => {
     fetchRequest();
+    fetchEstimates();
   }, [params.id]);
 
   async function fetchRequest() {
@@ -185,6 +205,25 @@ export default function RequestDetailPage() {
       console.error('Failed to fetch request:', error);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function fetchEstimates() {
+    try {
+      setLoadingEstimates(true);
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:4001/api/v1/estimates?serviceRequestId=${params.id}&latestOnly=true`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+
+      if (data.success || data.data) {
+        setEstimates(data.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch estimates:', error);
+    } finally {
+      setLoadingEstimates(false);
     }
   }
 
@@ -854,10 +893,10 @@ export default function RequestDetailPage() {
                 <div>
                   <label className="text-sm text-gray-500">Duration</label>
                   <p className="font-medium">
-                    {request.status === 'COMPLETED' && request.completedAt
-                      ? calculateDuration(request.createdAt, request.completedAt)
-                      : request.status === 'IN_PROGRESS' || request.status === 'ASSIGNED'
-                        ? `${calculateDuration(request.createdAt)} (ongoing)`
+                    {request.status === 'COMPLETED' && request.completedAt && request.startedAt
+                      ? calculateDuration(request.startedAt, request.completedAt)
+                      : request.status === 'IN_PROGRESS' && request.startedAt
+                        ? `${calculateDuration(request.startedAt)} (ongoing)`
                         : '-'}
                   </p>
                 </div>
@@ -1079,6 +1118,89 @@ export default function RequestDetailPage() {
                     + Add Asset
                   </button>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Estimates Section */}
+          <div className="rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Estimates</h2>
+              <Link
+                href={`/estimates/new?serviceRequestId=${params.id}`}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Create Estimate
+              </Link>
+            </div>
+
+            {loadingEstimates ? (
+              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                Loading estimates...
+              </div>
+            ) : estimates.length === 0 ? (
+              <div className="py-8 text-center">
+                <svg className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <p className="text-gray-500 dark:text-gray-400">No estimates created yet</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                  Create an estimate to start the quotation process
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {estimates.map((estimate) => (
+                  <Link
+                    key={estimate.id}
+                    href={`/estimates/${estimate.id}`}
+                    className="block p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                            {estimate.estimateNo}
+                          </span>
+                          {estimate.version > 1 && (
+                            <span className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded">
+                              V{estimate.version}
+                            </span>
+                          )}
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            estimate.status === 'DRAFT' ? 'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-300' :
+                            estimate.status === 'APPROVED' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                            estimate.status === 'REJECTED' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                            estimate.status === 'PENDING_MANAGER_APPROVAL' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                            estimate.status === 'CONVERTED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                            'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          }`}>
+                            {estimate.status.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {estimate.title}
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          {formatDate(estimate.createdAt)}
+                          {estimate.createdBy && ` by ${estimate.createdBy.firstName} ${estimate.createdBy.lastName}`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
+                          {new Intl.NumberFormat('en-BH', {
+                            style: 'currency',
+                            currency: 'BHD',
+                            minimumFractionDigits: 3,
+                          }).format(parseFloat(estimate.total) || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
             )}
           </div>

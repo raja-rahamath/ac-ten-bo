@@ -3,13 +3,19 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '@/lib/api';
 
+interface Permission {
+  id: string;
+  resource: string;
+  action: string;
+}
+
 interface Role {
   id: string;
   name: string;
   displayName: string;
   displayNameAr?: string;
   description?: string;
-  permissions?: string[];
+  permissions?: Permission[];
   isActive: boolean;
   createdAt: string;
 }
@@ -20,12 +26,25 @@ const AVAILABLE_PERMISSIONS = [
   { group: 'Employees', permissions: ['employees:read', 'employees:create', 'employees:update', 'employees:delete'] },
   { group: 'Service Requests', permissions: ['service-requests:read', 'service-requests:create', 'service-requests:update', 'service-requests:delete'] },
   { group: 'Properties', permissions: ['properties:read', 'properties:create', 'properties:update', 'properties:delete'] },
+  { group: 'Estimates', permissions: ['estimates:read', 'estimates:create', 'estimates:update', 'estimates:delete'] },
+  { group: 'Sales', permissions: ['sales:read', 'sales:create', 'sales:update', 'sales:delete'] },
+  { group: 'Billing', permissions: ['billing:read', 'billing:create', 'billing:update', 'billing:delete'] },
   { group: 'Invoices', permissions: ['invoices:read', 'invoices:create', 'invoices:update', 'invoices:delete'] },
+  { group: 'Payments', permissions: ['payments:read', 'payments:create', 'payments:update', 'payments:delete'] },
+  { group: 'Assets', permissions: ['assets:read', 'assets:create', 'assets:update', 'assets:delete'] },
+  { group: 'Inventory', permissions: ['inventory:read', 'inventory:create', 'inventory:update', 'inventory:delete'] },
   { group: 'Reports', permissions: ['reports:read'] },
   { group: 'Settings', permissions: ['settings:read', 'settings:update'] },
   { group: 'Users', permissions: ['users:read', 'users:create', 'users:update', 'users:delete'] },
   { group: 'Roles', permissions: ['roles:read', 'roles:create', 'roles:update', 'roles:delete'] },
+  { group: 'Menus', permissions: ['menus:read', 'menus:create', 'menus:update', 'menus:delete'] },
 ];
+
+// Helper to convert permission objects to string format "resource:action"
+const getPermissionStrings = (permissions?: Permission[]): string[] => {
+  if (!permissions) return [];
+  return permissions.map(p => `${p.resource}:${p.action}`);
+};
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -50,7 +69,7 @@ export default function RolesPage() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const response = await apiService.get('/roles');
+      const response = await apiService.get<{ data: Role[] }>('/roles');
       setRoles(response.data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
@@ -76,12 +95,12 @@ export default function RolesPage() {
   const handleEdit = (role: Role) => {
     setEditingRole(role);
     setFormData({
-      name: role.name,
-      displayName: role.displayName,
+      name: role.name || '',
+      displayName: role.displayName || '',
       displayNameAr: role.displayNameAr || '',
       description: role.description || '',
-      permissions: role.permissions || [],
-      isActive: role.isActive,
+      permissions: getPermissionStrings(role.permissions),
+      isActive: role.isActive ?? true,
     });
     setError('');
     setShowModal(true);
@@ -184,14 +203,14 @@ export default function RolesPage() {
                 {role.description || 'No description'}
               </p>
               <div className="flex flex-wrap gap-1 mb-4">
-                {(role.permissions || []).slice(0, 3).map((perm) => (
+                {getPermissionStrings(role.permissions).slice(0, 3).map((perm) => (
                   <span key={perm} className="px-2 py-0.5 bg-dark-100 dark:bg-dark-700 rounded text-xs text-dark-600 dark:text-dark-400">
                     {perm}
                   </span>
                 ))}
-                {(role.permissions || []).length > 3 && (
+                {getPermissionStrings(role.permissions).length > 3 && (
                   <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 rounded text-xs text-primary-600 dark:text-primary-400">
-                    +{(role.permissions || []).length - 3} more
+                    +{getPermissionStrings(role.permissions).length - 3} more
                   </span>
                 )}
               </div>
@@ -217,7 +236,7 @@ export default function RolesPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-dark-800 dark:text-white">

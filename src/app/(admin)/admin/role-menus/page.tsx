@@ -48,8 +48,8 @@ export default function RoleMenusPage() {
     try {
       setLoading(true);
       const [rolesRes, menusRes] = await Promise.all([
-        apiService.get('/roles'),
-        apiService.get('/menus'),
+        apiService.get<{ data: Role[] }>('/roles'),
+        apiService.get<{ data: Menu[] }>('/menus/items'),
       ]);
       setRoles(rolesRes.data || []);
       setMenus(menusRes.data || []);
@@ -65,8 +65,9 @@ export default function RoleMenusPage() {
 
   const fetchRoleMenus = async (roleId: string) => {
     try {
-      const response = await apiService.get(`/roles/${roleId}/menus`);
-      setRoleMenus(response.data?.map((m: Menu) => ({ roleId, menuId: m.id })) || []);
+      const response = await apiService.get<{ data: { role: any; menuItems: Menu[] } }>(`/menus/roles/${roleId}`);
+      const menuItems = response.data?.menuItems || [];
+      setRoleMenus(menuItems.map((item: Menu) => ({ roleId, menuId: item.id })));
     } catch (error) {
       console.error('Error fetching role menus:', error);
       setRoleMenus([]);
@@ -82,11 +83,19 @@ export default function RoleMenusPage() {
     setSaving(true);
 
     try {
+      // Build the new menu IDs list
+      const currentMenuIds = roleMenus.map(rm => rm.menuId);
+      const newMenuIds = isSelected
+        ? currentMenuIds.filter(id => id !== menuId)
+        : [...currentMenuIds, menuId];
+
+      // Update via PUT endpoint
+      await apiService.put(`/menus/roles/${selectedRole}`, { menuItemIds: newMenuIds });
+
+      // Update local state
       if (isSelected) {
-        await apiService.delete(`/roles/${selectedRole}/menus/${menuId}`);
         setRoleMenus(prev => prev.filter(rm => rm.menuId !== menuId));
       } else {
-        await apiService.post(`/roles/${selectedRole}/menus`, { menuId });
         setRoleMenus(prev => [...prev, { roleId: selectedRole, menuId }]);
       }
     } catch (error: any) {
@@ -99,9 +108,9 @@ export default function RoleMenusPage() {
   const handleSelectAll = async () => {
     setSaving(true);
     try {
-      const menuIds = menus.map(m => m.id);
-      await apiService.put(`/roles/${selectedRole}/menus`, { menuIds });
-      setRoleMenus(menuIds.map(menuId => ({ roleId: selectedRole, menuId })));
+      const menuItemIds = menus.map(m => m.id);
+      await apiService.put(`/menus/roles/${selectedRole}`, { menuItemIds });
+      setRoleMenus(menuItemIds.map(menuId => ({ roleId: selectedRole, menuId })));
     } catch (error: any) {
       alert(error.message || 'Failed to update menu assignments');
     } finally {
@@ -112,7 +121,7 @@ export default function RoleMenusPage() {
   const handleClearAll = async () => {
     setSaving(true);
     try {
-      await apiService.put(`/roles/${selectedRole}/menus`, { menuIds: [] });
+      await apiService.put(`/menus/roles/${selectedRole}`, { menuItemIds: [] });
       setRoleMenus([]);
     } catch (error: any) {
       alert(error.message || 'Failed to clear menu assignments');

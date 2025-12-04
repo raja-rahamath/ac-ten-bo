@@ -45,7 +45,32 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
   ),
+  filter: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+    </svg>
+  ),
+  x: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  ),
 };
+
+interface Department {
+  id: string;
+  name: string;
+}
+
+interface JobTitle {
+  id: string;
+  name: string;
+}
+
+interface Zone {
+  id: string;
+  name: string;
+}
 
 interface Employee {
   id: string;
@@ -77,15 +102,65 @@ export default function EmployeesPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Filter state
+  const [departmentId, setDepartmentId] = useState('');
+  const [jobTitleId, setJobTitleId] = useState('');
+  const [zoneId, setZoneId] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filter options
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
+
+  // Fetch filter options on mount
+  useEffect(() => {
+    fetchFilterOptions();
+  }, []);
+
   useEffect(() => {
     fetchEmployees();
-  }, [page]);
+  }, [page, departmentId, jobTitleId, zoneId, search]);
+
+  async function fetchFilterOptions() {
+    const token = localStorage.getItem('accessToken');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    try {
+      const [deptRes, jobRes, zoneRes] = await Promise.all([
+        fetch('http://localhost:4001/api/v1/departments?limit=100', { headers }),
+        fetch('http://localhost:4001/api/v1/job-titles?limit=100', { headers }),
+        fetch('http://localhost:4001/api/v1/zones?limit=100', { headers }),
+      ]);
+
+      const [deptData, jobData, zoneData] = await Promise.all([
+        deptRes.json(),
+        jobRes.json(),
+        zoneRes.json(),
+      ]);
+
+      if (deptData.success) setDepartments(deptData.data || []);
+      if (jobData.success) setJobTitles(jobData.data || []);
+      if (zoneData.success) setZones(zoneData.data || []);
+    } catch (error) {
+      console.error('Failed to fetch filter options:', error);
+    }
+  }
 
   async function fetchEmployees() {
     try {
+      setIsLoading(true);
       const token = localStorage.getItem('accessToken');
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', '20');
+      if (search) params.set('search', search);
+      if (departmentId) params.set('departmentId', departmentId);
+      if (jobTitleId) params.set('jobTitleId', jobTitleId);
+      if (zoneId) params.set('zoneId', zoneId);
+
       const response = await fetch(
-        `http://localhost:4001/api/v1/employees?page=${page}&limit=20`,
+        `http://localhost:4001/api/v1/employees?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();
@@ -190,16 +265,20 @@ export default function EmployeesPage() {
     }
   }
 
-  const filteredEmployees = employees.filter((e) => {
-    if (!search) return true;
-    const searchLower = search.toLowerCase();
-    return (
-      e.firstName.toLowerCase().includes(searchLower) ||
-      e.lastName.toLowerCase().includes(searchLower) ||
-      e.email.toLowerCase().includes(searchLower) ||
-      e.employeeNo.toLowerCase().includes(searchLower)
-    );
-  });
+  const activeFilterCount = [departmentId, jobTitleId, zoneId].filter(Boolean).length;
+
+  const clearFilters = () => {
+    setDepartmentId('');
+    setJobTitleId('');
+    setZoneId('');
+    setPage(1);
+  };
+
+  // Reset to page 1 when search changes
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
 
   return (
     <div className="space-y-6">
@@ -288,18 +367,114 @@ export default function EmployeesPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-dark-400">
-          {Icons.search}
+      {/* Search and Filters */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[280px] max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-dark-400">
+              {Icons.search}
+            </div>
+            <input
+              type="text"
+              placeholder="Search by name, email, or employee #..."
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="input-modern !pl-11"
+            />
+          </div>
+
+          {/* Filter Toggle Button */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-colors text-sm font-medium ${
+              activeFilterCount > 0
+                ? 'border-primary-300 bg-primary-50 text-primary-600 dark:border-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
+                : 'border-dark-200 dark:border-dark-600 text-dark-600 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700'
+            }`}
+          >
+            {Icons.filter}
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary-500 text-white text-xs">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {/* Clear Filters */}
+          {activeFilterCount > 0 && (
+            <button
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1 px-3 py-2.5 rounded-xl text-sm font-medium text-dark-500 hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200 transition-colors"
+            >
+              {Icons.x}
+              Clear
+            </button>
+          )}
         </div>
-        <input
-          type="text"
-          placeholder="Search by name, email, or employee #..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="input-modern !pl-11"
-        />
+
+        {/* Filter Dropdowns */}
+        {showFilters && (
+          <div className="flex flex-wrap gap-3 p-4 rounded-xl bg-dark-50 dark:bg-dark-800/50 border border-dark-100 dark:border-dark-700">
+            {/* Department Filter */}
+            <div className="min-w-[180px]">
+              <label className="block text-xs font-medium text-dark-500 dark:text-dark-400 mb-1.5">
+                Department
+              </label>
+              <select
+                value={departmentId}
+                onChange={(e) => { setDepartmentId(e.target.value); setPage(1); }}
+                className="input-modern text-sm"
+              >
+                <option value="">All Departments</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Job Title Filter */}
+            <div className="min-w-[180px]">
+              <label className="block text-xs font-medium text-dark-500 dark:text-dark-400 mb-1.5">
+                Job Title
+              </label>
+              <select
+                value={jobTitleId}
+                onChange={(e) => { setJobTitleId(e.target.value); setPage(1); }}
+                className="input-modern text-sm"
+              >
+                <option value="">All Job Titles</option>
+                {jobTitles.map((job) => (
+                  <option key={job.id} value={job.id}>
+                    {job.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Zone Filter */}
+            <div className="min-w-[180px]">
+              <label className="block text-xs font-medium text-dark-500 dark:text-dark-400 mb-1.5">
+                Zone
+              </label>
+              <select
+                value={zoneId}
+                onChange={(e) => { setZoneId(e.target.value); setPage(1); }}
+                className="input-modern text-sm"
+              >
+                <option value="">All Zones</option>
+                {zones.map((zone) => (
+                  <option key={zone.id} value={zone.id}>
+                    {zone.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Employees Table */}
@@ -311,7 +486,7 @@ export default function EmployeesPage() {
               <span className="text-dark-400 dark:text-dark-500 text-sm">Loading employees...</span>
             </div>
           </div>
-        ) : filteredEmployees.length === 0 ? (
+        ) : employees.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="h-16 w-16 rounded-2xl bg-dark-100 dark:bg-dark-700 flex items-center justify-center text-dark-400 mb-4">
               {Icons.user}
@@ -336,7 +511,7 @@ export default function EmployeesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredEmployees.map((employee, index) => (
+                  {employees.map((employee, index) => (
                     <tr
                       key={employee.id}
                       className="animate-fade-in"

@@ -501,7 +501,8 @@ export type CommentType =
   | 'WHATSAPP'
   | 'CUSTOMER_MESSAGE'
   | 'SITE_VISIT_NOTE'
-  | 'SCHEDULING_NOTE';
+  | 'SCHEDULING_NOTE'
+  | 'SCOPE_OF_WORK';
 
 export type ContactMethod = 'PHONE' | 'EMAIL' | 'IN_PERSON' | 'WHATSAPP';
 
