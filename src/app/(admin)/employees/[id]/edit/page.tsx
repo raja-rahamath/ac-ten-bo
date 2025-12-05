@@ -48,6 +48,13 @@ interface Zone {
   name: string;
 }
 
+interface Role {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+}
+
 interface Manager {
   id: string;
   firstName: string;
@@ -101,6 +108,7 @@ export default function EditEmployeePage() {
   const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
 
   // Form state
   const [firstName, setFirstName] = useState('');
@@ -124,6 +132,8 @@ export default function EditEmployeePage() {
   const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
   const [isManagerDropdownOpen, setIsManagerDropdownOpen] = useState(false);
   const [managerSearch, setManagerSearch] = useState('');
+  const [hasSystemAccess, setHasSystemAccess] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('');
 
   const zoneDropdownRef = useRef<HTMLDivElement>(null);
   const managerDropdownRef = useRef<HTMLDivElement>(null);
@@ -149,6 +159,7 @@ export default function EditEmployeePage() {
     fetchJobTitles();
     fetchZones();
     fetchManagers();
+    fetchRoles();
   }, [params.id]);
 
   // Fetch divisions when company changes
@@ -214,6 +225,12 @@ export default function EditEmployeePage() {
         // Set zones from zone assignments
         if (emp.zoneAssignments) {
           setSelectedZones(emp.zoneAssignments.map(za => za.zone.id));
+        }
+
+        // Set system access settings
+        setHasSystemAccess(emp.hasSystemAccess || false);
+        if (emp.user?.role?.id) {
+          setSelectedRole(emp.user.role.id);
         }
       }
     } catch (error) {
@@ -314,6 +331,18 @@ export default function EditEmployeePage() {
       }
     } catch (error) {
       console.error('Failed to fetch managers:', error);
+    }
+  }
+
+  async function fetchRoles() {
+    try {
+      const response = await fetchWithAuth('http://localhost:4001/api/v1/roles');
+      const data = await response.json();
+      if (data.success) {
+        setRoles(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch roles:', error);
     }
   }
 
@@ -835,6 +864,64 @@ export default function EditEmployeePage() {
                       </span>
                     );
                   })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* System Access */}
+          <div className="border-b border-dark-100 dark:border-dark-700 pb-4">
+            <h3 className="font-semibold text-dark-800 dark:text-white mb-4">System Access</h3>
+            <div className="p-4 rounded-xl bg-dark-50 dark:bg-dark-700/50 border border-dark-100 dark:border-dark-600">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <label className="font-medium text-dark-800 dark:text-white">System Access</label>
+                  <p className="text-sm text-dark-500 dark:text-dark-400">Allow this employee to login to the system</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHasSystemAccess(!hasSystemAccess);
+                    if (hasSystemAccess) {
+                      setSelectedRole('');
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    hasSystemAccess ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-500'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      hasSystemAccess ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {hasSystemAccess && (
+                <div className="pt-4 border-t border-dark-200 dark:border-dark-600">
+                  <label htmlFor="roleId" className="mb-2 block font-medium text-dark-700 dark:text-dark-300">
+                    System Role <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="roleId"
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    required={hasSystemAccess}
+                    className="w-full rounded-lg border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 p-3 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  >
+                    <option value="">Select a role</option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.displayName}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedRole && (
+                    <p className="mt-2 text-sm text-dark-500 dark:text-dark-400">
+                      {roles.find((r) => r.id === selectedRole)?.description}
+                    </p>
+                  )}
                 </div>
               )}
             </div>

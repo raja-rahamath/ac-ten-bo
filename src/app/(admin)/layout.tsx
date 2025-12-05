@@ -367,6 +367,11 @@ export default function AdminLayout({
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
       </svg>
     ),
+    area: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+      </svg>
+    ),
     jobTitle: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -495,6 +500,7 @@ export default function AdminLayout({
         { href: '/reference/states', label: 'States', labelAr: 'الولايات', icon: iconMap.state },
         { href: '/reference/districts', label: 'Districts', labelAr: 'الأحياء', icon: iconMap.district },
         { href: '/reference/governorates', label: 'Governorates', labelAr: 'المحافظات', icon: iconMap.governorate },
+        { href: '/reference/areas', label: 'Areas', labelAr: 'المناطق الفرعية', icon: iconMap.area },
         { href: '/reference/job-titles', label: 'Job Titles', labelAr: 'المسميات الوظيفية', icon: iconMap.jobTitle },
         { href: '/reference/property-types', label: 'Property Types', labelAr: 'أنواع العقارات', icon: iconMap.propertyType },
         { href: '/reference/building-types', label: 'Building Types', labelAr: 'أنواع المباني', icon: iconMap.buildingType },
@@ -531,6 +537,39 @@ export default function AdminLayout({
     },
   ];
 
+  // Build set of permitted hrefs from menuItems (role-based permissions)
+  const permittedHrefs = new Set(menuItems.map((menu) => menu.href));
+
+  // Filter menu items based on role permissions
+  const filterByPermissions = (items: any[]) => {
+    // If no menuItems loaded yet, show nothing (will load from API)
+    if (menuItems.length === 0) return [];
+
+    return items.map((item: any) => {
+      // Single item (no children)
+      if (!item.children) {
+        return permittedHrefs.has(item.href) ? item : null;
+      }
+
+      // Group with children - filter children first
+      const permittedChildren = item.children.filter((child: any) =>
+        permittedHrefs.has(child.href)
+      );
+
+      // Only include group if it has at least one permitted child
+      if (permittedChildren.length > 0) {
+        return {
+          ...item,
+          children: permittedChildren,
+        };
+      }
+      return null;
+    }).filter(Boolean);
+  };
+
+  // Apply permission filter to navGroups
+  const permittedNavGroups = filterByPermissions(navGroups);
+
   // Toggle group expansion
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev =>
@@ -540,9 +579,9 @@ export default function AdminLayout({
     );
   };
 
-  // Expand all groups
+  // Expand all groups (only permitted ones)
   const expandAllGroups = () => {
-    const allGroupIds = navGroups.filter((g: any) => g.children).map((g: any) => g.id);
+    const allGroupIds = permittedNavGroups.filter((g: any) => g.children).map((g: any) => g.id);
     setExpandedGroups(allGroupIds);
   };
 
@@ -580,8 +619,8 @@ export default function AdminLayout({
     }).filter(Boolean);
   };
 
-  // Get filtered nav groups
-  const filteredNavGroups = filterMenuItems(navGroups);
+  // Apply search filter on top of permission filter
+  const filteredNavGroups = filterMenuItems(permittedNavGroups);
 
   // Auto-expand groups when searching
   const shouldShowExpanded = (groupId: string) => {
@@ -668,59 +707,60 @@ export default function AdminLayout({
             </button>
           </div>
 
+          {/* Search and Expand/Collapse controls - Fixed at top */}
+          {isSidebarOpen && (
+            <div className="sticky top-0 z-10 bg-white dark:bg-dark-900 px-3 py-3 space-y-2 border-b border-dark-100 dark:border-dark-700">
+              {/* Search Input */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={menuSearch}
+                  onChange={(e) => setMenuSearch(e.target.value)}
+                  placeholder={language === 'ar' ? 'بحث في القائمة...' : 'Search menu...'}
+                  className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-dark-100 dark:bg-dark-700 border-0 text-dark-800 dark:text-white placeholder-dark-400 dark:placeholder-dark-500 focus:ring-2 focus:ring-primary-500"
+                />
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                {menuSearch && (
+                  <button
+                    onClick={() => setMenuSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-dark-200 dark:hover:bg-dark-600"
+                  >
+                    <svg className="w-3 h-3 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {/* Expand/Collapse buttons */}
+              <div className="flex gap-1">
+                <button
+                  onClick={expandAllGroups}
+                  className="flex-1 px-2 py-1.5 text-xs rounded-lg bg-dark-100 dark:bg-dark-700 text-dark-600 dark:text-dark-400 hover:bg-dark-200 dark:hover:bg-dark-600 transition-colors flex items-center justify-center gap-1"
+                  title={language === 'ar' ? 'توسيع الكل' : 'Expand All'}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                  <span>{language === 'ar' ? 'توسيع' : 'Expand'}</span>
+                </button>
+                <button
+                  onClick={collapseAllGroups}
+                  className="flex-1 px-2 py-1.5 text-xs rounded-lg bg-dark-100 dark:bg-dark-700 text-dark-600 dark:text-dark-400 hover:bg-dark-200 dark:hover:bg-dark-600 transition-colors flex items-center justify-center gap-1"
+                  title={language === 'ar' ? 'طي الكل' : 'Collapse All'}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                  <span>{language === 'ar' ? 'طي' : 'Collapse'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto py-4 px-3">
-            {/* Search and Expand/Collapse controls */}
-            {isSidebarOpen && (
-              <div className="mb-4 space-y-2">
-                {/* Search Input */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={menuSearch}
-                    onChange={(e) => setMenuSearch(e.target.value)}
-                    placeholder={language === 'ar' ? 'بحث في القائمة...' : 'Search menu...'}
-                    className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-dark-100 dark:bg-dark-700 border-0 text-dark-800 dark:text-white placeholder-dark-400 dark:placeholder-dark-500 focus:ring-2 focus:ring-primary-500"
-                  />
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  {menuSearch && (
-                    <button
-                      onClick={() => setMenuSearch('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-dark-200 dark:hover:bg-dark-600"
-                    >
-                      <svg className="w-3 h-3 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-                {/* Expand/Collapse buttons */}
-                <div className="flex gap-1">
-                  <button
-                    onClick={expandAllGroups}
-                    className="flex-1 px-2 py-1.5 text-xs rounded-lg bg-dark-100 dark:bg-dark-700 text-dark-600 dark:text-dark-400 hover:bg-dark-200 dark:hover:bg-dark-600 transition-colors flex items-center justify-center gap-1"
-                    title={language === 'ar' ? 'توسيع الكل' : 'Expand All'}
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                    <span>{language === 'ar' ? 'توسيع' : 'Expand'}</span>
-                  </button>
-                  <button
-                    onClick={collapseAllGroups}
-                    className="flex-1 px-2 py-1.5 text-xs rounded-lg bg-dark-100 dark:bg-dark-700 text-dark-600 dark:text-dark-400 hover:bg-dark-200 dark:hover:bg-dark-600 transition-colors flex items-center justify-center gap-1"
-                    title={language === 'ar' ? 'طي الكل' : 'Collapse All'}
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                    </svg>
-                    <span>{language === 'ar' ? 'طي' : 'Collapse'}</span>
-                  </button>
-                </div>
-              </div>
-            )}
             <ul className="space-y-1">
               {filteredNavGroups.map((item: any) => (
                 <li key={item.href || item.id}>

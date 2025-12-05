@@ -5,8 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
 
-// Idle timeout: 5 minutes (300000 ms)
-const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
+// Idle timeout: 15 minutes (900000 ms)
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 // Show warning 60 seconds before expiry
 const WARNING_BEFORE_EXPIRY_MS = 60 * 1000;
 // Countdown duration in seconds

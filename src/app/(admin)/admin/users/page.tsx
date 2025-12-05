@@ -2,6 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { apiService } from '@/lib/api';
+import { Button } from '@/components/ui/Button';
+
+const Icons = {
+  plus: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+  ),
+};
 
 interface User {
   id: string;
@@ -51,7 +60,7 @@ export default function UsersPage() {
     try {
       setLoading(true);
       const [usersRes, rolesRes] = await Promise.all([
-        apiService.get('/users'),
+        apiService.get('/users?limit=500'),
         apiService.get('/roles'),
       ]);
       setUsers(usersRes.data || []);
@@ -160,9 +169,10 @@ export default function UsersPage() {
           <h1 className="text-2xl font-bold text-dark-800 dark:text-white">Users</h1>
           <p className="text-dark-500 dark:text-dark-400 text-sm">Manage system users and their access</p>
         </div>
-        <button onClick={handleAdd} className="btn-primary flex items-center gap-2">
-          + New User
-        </button>
+        <Button onClick={handleAdd} className="btn-modern btn-primary gap-2">
+          {Icons.plus}
+          Add User
+        </Button>
       </div>
 
       {/* Search */}
@@ -176,7 +186,7 @@ export default function UsersPage() {
             placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input-modern pl-10"
+            className="input-modern !pl-11"
           />
         </div>
       </div>

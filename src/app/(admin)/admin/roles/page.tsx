@@ -16,28 +16,55 @@ interface Role {
   displayNameAr?: string;
   description?: string;
   permissions?: Permission[];
+  isSystem: boolean;
   isActive: boolean;
   createdAt: string;
 }
 
 const AVAILABLE_PERMISSIONS = [
+  // Core
   { group: 'Dashboard', permissions: ['dashboard:read'] },
-  { group: 'Customers', permissions: ['customers:read', 'customers:create', 'customers:update', 'customers:delete'] },
-  { group: 'Employees', permissions: ['employees:read', 'employees:create', 'employees:update', 'employees:delete'] },
-  { group: 'Service Requests', permissions: ['service-requests:read', 'service-requests:create', 'service-requests:update', 'service-requests:delete'] },
-  { group: 'Properties', permissions: ['properties:read', 'properties:create', 'properties:update', 'properties:delete'] },
-  { group: 'Estimates', permissions: ['estimates:read', 'estimates:create', 'estimates:update', 'estimates:delete'] },
-  { group: 'Sales', permissions: ['sales:read', 'sales:create', 'sales:update', 'sales:delete'] },
-  { group: 'Billing', permissions: ['billing:read', 'billing:create', 'billing:update', 'billing:delete'] },
-  { group: 'Invoices', permissions: ['invoices:read', 'invoices:create', 'invoices:update', 'invoices:delete'] },
-  { group: 'Payments', permissions: ['payments:read', 'payments:create', 'payments:update', 'payments:delete'] },
-  { group: 'Assets', permissions: ['assets:read', 'assets:create', 'assets:update', 'assets:delete'] },
-  { group: 'Inventory', permissions: ['inventory:read', 'inventory:create', 'inventory:update', 'inventory:delete'] },
-  { group: 'Reports', permissions: ['reports:read'] },
-  { group: 'Settings', permissions: ['settings:read', 'settings:update'] },
-  { group: 'Users', permissions: ['users:read', 'users:create', 'users:update', 'users:delete'] },
-  { group: 'Roles', permissions: ['roles:read', 'roles:create', 'roles:update', 'roles:delete'] },
-  { group: 'Menus', permissions: ['menus:read', 'menus:create', 'menus:update', 'menus:delete'] },
+  { group: 'Users', permissions: ['users:read', 'users:write', 'users:delete'] },
+  { group: 'Roles', permissions: ['roles:read', 'roles:write', 'roles:delete'] },
+
+  // CRM
+  { group: 'Customers', permissions: ['customers:read', 'customers:write', 'customers:delete'] },
+  { group: 'Employees', permissions: ['employees:read', 'employees:write', 'employees:delete'] },
+
+  // Operations
+  { group: 'Service Requests', permissions: ['service_requests:read', 'service_requests:write', 'service_requests:delete', 'service_requests:assign'] },
+  { group: 'Work Orders', permissions: ['work-orders:read', 'work-orders:write', 'work-orders:delete', 'work-orders:assign'] },
+  { group: 'Schedules', permissions: ['schedules:read', 'schedules:write', 'schedules:delete'] },
+  { group: 'Leaves', permissions: ['leaves:read', 'leaves:write', 'leaves:delete', 'leaves:approve'] },
+
+  // Properties
+  { group: 'Properties', permissions: ['properties:read', 'properties:write', 'properties:delete'] },
+  { group: 'Buildings', permissions: ['buildings:read', 'buildings:write', 'buildings:delete'] },
+  { group: 'Units', permissions: ['units:read', 'units:write', 'units:delete'] },
+  { group: 'Rooms', permissions: ['rooms:read', 'rooms:write', 'rooms:delete'] },
+  { group: 'Assets', permissions: ['assets:read', 'assets:write', 'assets:delete'] },
+
+  // Financial
+  { group: 'Invoices', permissions: ['invoices:read', 'invoices:write', 'invoices:delete'] },
+  { group: 'Estimates', permissions: ['estimates:read', 'estimates:write', 'estimates:delete'] },
+  { group: 'Quotes', permissions: ['quotes:read', 'quotes:write', 'quotes:delete'] },
+  { group: 'Receipts', permissions: ['receipts:read', 'receipts:write', 'receipts:delete'] },
+  { group: 'AMC Contracts', permissions: ['amc:read', 'amc:write', 'amc:delete'] },
+
+  // Inventory
+  { group: 'Inventory Items', permissions: ['inventory-items:read', 'inventory-items:write', 'inventory-items:delete'] },
+
+  // Reference Data
+  { group: 'Zones', permissions: ['zones:read', 'zones:write', 'zones:delete'] },
+  { group: 'Areas', permissions: ['areas:read', 'areas:write', 'areas:delete'] },
+  { group: 'Reference Data', permissions: ['reference-data:read', 'reference-data:write', 'reference-data:delete'] },
+  { group: 'Action Templates', permissions: ['action-templates:read', 'action-templates:write', 'action-templates:delete'] },
+  { group: 'Currencies', permissions: ['currencies:read', 'currencies:write', 'currencies:delete'] },
+
+  // Settings & Reports
+  { group: 'Company', permissions: ['company:read', 'company:write'] },
+  { group: 'Reports', permissions: ['reports:read', 'reports:export'] },
+  { group: 'Settings', permissions: ['settings:read', 'settings:write'] },
 ];
 
 // Helper to convert permission objects to string format "resource:action"
@@ -56,8 +83,8 @@ export default function RolesPage() {
     displayName: '',
     displayNameAr: '',
     description: '',
-    permissions: [] as string[],
     isActive: true,
+    permissions: [] as string[],
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -85,8 +112,8 @@ export default function RolesPage() {
       displayName: '',
       displayNameAr: '',
       description: '',
-      permissions: [],
       isActive: true,
+      permissions: [],
     });
     setError('');
     setShowModal(true);
@@ -99,8 +126,8 @@ export default function RolesPage() {
       displayName: role.displayName || '',
       displayNameAr: role.displayNameAr || '',
       description: role.description || '',
-      permissions: getPermissionStrings(role.permissions),
       isActive: role.isActive ?? true,
+      permissions: getPermissionStrings(role.permissions),
     });
     setError('');
     setShowModal(true);
@@ -191,13 +218,20 @@ export default function RolesPage() {
                   <h3 className="font-semibold text-dark-800 dark:text-white">{role.displayName}</h3>
                   <p className="text-sm text-dark-500">{role.name}</p>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  role.isActive
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                }`}>
-                  {role.isActive ? 'Active' : 'Inactive'}
-                </span>
+                <div className="flex gap-2">
+                  {role.isSystem && (
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                      System
+                    </span>
+                  )}
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    role.isActive
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  }`}>
+                    {role.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
               </div>
               <p className="text-sm text-dark-600 dark:text-dark-400 mb-4 line-clamp-2">
                 {role.description || 'No description'}
@@ -221,12 +255,14 @@ export default function RolesPage() {
                 >
                   Edit
                 </button>
-                <button
-                  onClick={() => handleDelete(role)}
-                  className="px-3 py-2 rounded-lg border border-red-200 dark:border-red-900/50 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
-                >
-                  Delete
-                </button>
+                {!role.isSystem && (
+                  <button
+                    onClick={() => handleDelete(role)}
+                    className="px-3 py-2 rounded-lg border border-red-200 dark:border-red-900/50 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           ))
@@ -309,6 +345,18 @@ export default function RolesPage() {
               </div>
 
               <div>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    className="w-4 h-4 rounded border-dark-300 text-primary-500 focus:ring-primary-500"
+                  />
+                  <span className="text-sm font-medium text-dark-700 dark:text-dark-300">Active</span>
+                </label>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-3">Permissions</label>
                 <div className="space-y-4 max-h-60 overflow-y-auto border border-dark-200 dark:border-dark-600 rounded-lg p-4">
                   {AVAILABLE_PERMISSIONS.map((group) => (
@@ -338,18 +386,6 @@ export default function RolesPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="w-4 h-4 rounded border-dark-300 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span className="text-sm text-dark-600 dark:text-dark-400">Active</span>
-                </label>
               </div>
 
               <div className="flex gap-3 pt-4">

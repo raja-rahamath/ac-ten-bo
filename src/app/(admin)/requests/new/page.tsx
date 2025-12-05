@@ -56,9 +56,24 @@ export default function NewRequestPage() {
   const [newCustomer, setNewCustomer] = useState({
     firstName: '',
     lastName: '',
+    countryCode: '+973', // Default to Bahrain
     phone: '',
     email: '',
   });
+
+  // Common GCC country codes
+  const countryCodes = [
+    { code: '+973', country: 'Bahrain', flag: '🇧🇭' },
+    { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
+    { code: '+971', country: 'UAE', flag: '🇦🇪' },
+    { code: '+965', country: 'Kuwait', flag: '🇰🇼' },
+    { code: '+968', country: 'Oman', flag: '🇴🇲' },
+    { code: '+974', country: 'Qatar', flag: '🇶🇦' },
+    { code: '+91', country: 'India', flag: '🇮🇳' },
+    { code: '+92', country: 'Pakistan', flag: '🇵🇰' },
+    { code: '+63', country: 'Philippines', flag: '🇵🇭' },
+    { code: '+880', country: 'Bangladesh', flag: '🇧🇩' },
+  ];
 
   // New property form
   const [newProperty, setNewProperty] = useState({
@@ -273,13 +288,20 @@ export default function NewRequestPage() {
 
     try {
       const token = localStorage.getItem('accessToken');
+      // Combine country code and phone number
+      const fullPhone = `${newCustomer.countryCode} ${newCustomer.phone}`;
       const res = await fetch('http://localhost:4001/api/v1/customers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newCustomer),
+        body: JSON.stringify({
+          firstName: newCustomer.firstName,
+          lastName: newCustomer.lastName,
+          phone: fullPhone,
+          email: newCustomer.email,
+        }),
       });
 
       const data = await res.json();
@@ -299,7 +321,7 @@ export default function NewRequestPage() {
 
       toast.success('Customer created successfully!');
       setShowNewCustomerModal(false);
-      setNewCustomer({ firstName: '', lastName: '', phone: '', email: '' });
+      setNewCustomer({ firstName: '', lastName: '', countryCode: '+973', phone: '', email: '' });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to create customer');
     } finally {
@@ -606,7 +628,7 @@ export default function NewRequestPage() {
       {/* New Customer Modal */}
       {showNewCustomerModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNewCustomerModal(false)} />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-md mx-4">
             <div className="px-6 py-4 border-b border-dark-100 dark:border-dark-700">
               <h3 className="text-lg font-semibold text-dark-800 dark:text-white">Add New Customer</h3>
@@ -645,14 +667,27 @@ export default function NewRequestPage() {
                 <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
                   Phone *
                 </label>
-                <input
-                  type="tel"
-                  value={newCustomer.phone}
-                  onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                  required
-                  placeholder="+973 XXXX XXXX"
-                  className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={newCustomer.countryCode}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, countryCode: e.target.value })}
+                    className="w-28 rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-2 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none text-sm"
+                  >
+                    {countryCodes.map((cc) => (
+                      <option key={cc.code} value={cc.code}>
+                        {cc.flag} {cc.code}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="tel"
+                    value={newCustomer.phone}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                    required
+                    placeholder="XXXX XXXX"
+                    className="flex-1 rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
               </div>
 
               <div>
@@ -692,7 +727,7 @@ export default function NewRequestPage() {
       {/* New Property Modal */}
       {showNewPropertyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNewPropertyModal(false)} />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-md mx-4">
             <div className="px-6 py-4 border-b border-dark-100 dark:border-dark-700">
               <h3 className="text-lg font-semibold text-dark-800 dark:text-white">Add New Property</h3>

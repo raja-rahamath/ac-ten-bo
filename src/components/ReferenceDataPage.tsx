@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '@/lib/api';
-import { Button } from '@/components/ui';
+import { Button, ConfirmModal } from '@/components/ui';
 
 interface Column {
   key: string;
@@ -13,7 +13,7 @@ interface Column {
 interface Field {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'select' | 'textarea' | 'checkbox';
+  type: 'text' | 'number' | 'select' | 'multiselect' | 'textarea' | 'checkbox';
   required?: boolean;
   options?: { value: string; label: string }[];
   optionsEndpoint?: string; // API endpoint to load options from (e.g., '/districts')
@@ -25,6 +25,17 @@ interface Field {
   filterKey?: string; // Key in the data to filter by (e.g., 'countryId')
   filterFromParent?: string; // For nested relations - path to get parent ID (e.g., 'state.countryId')
   isFilterOnly?: boolean; // If true, this field is only for filtering and not submitted to API
+  // Multiselect support
+  getValuesFromItem?: (item: any) => string[]; // Function to extract selected values from item for edit mode
+}
+
+interface TableFilter {
+  key: string; // Key to filter by (e.g., 'governorateId')
+  label: string; // Display label (e.g., 'Governorate')
+  endpoint: string; // API endpoint to fetch options (e.g., '/governorates')
+  optionLabelKey?: string; // Key for the label in the response (default: 'name')
+  optionValueKey?: string; // Key for the value in the response (default: 'id')
+  filterPath?: string; // Path to the value in the item (e.g., 'governorate.id' for nested objects)
 }
 
 interface ReferenceDataPageProps {
@@ -35,6 +46,9 @@ interface ReferenceDataPageProps {
   columns: Column[];
   fields: Field[];
   searchPlaceholder?: string;
+  hideDelete?: boolean; // If true, hides the delete button in the table
+  filters?: TableFilter[]; // Optional table filters
+  showToggleActive?: boolean; // If true, shows toggle active/inactive button instead of delete
 }
 
 export default function ReferenceDataPage({
@@ -45,6 +59,9 @@ export default function ReferenceDataPage({
   columns,
   fields,
   searchPlaceholder = 'Search...',
+  hideDelete = false,
+  filters = [],
+  showToggleActive = false,
 }: ReferenceDataPageProps) {
   // Derive singular title from plural if not provided (e.g., "Zones" -> "Zone")
   const itemName = singularTitle || (title.endsWith('ies') ? title.slice(0, -3) + 'y' : title.endsWith('s') ? title.slice(0, -1) : title);
@@ -58,11 +75,52 @@ export default function ReferenceDataPage({
   const [error, setError] = useState('');
   // Store all loaded data for filtering
   const [dynamicOptionsData, setDynamicOptionsData] = useState<Record<string, any[]>>({});
+  // Table filter state
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [filterOptionsData, setFilterOptionsData] = useState<Record<string, any[]>>({});
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'danger' | 'warning' | 'info';
+    confirmText: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'danger',
+    confirmText: 'Confirm',
+    onConfirm: () => {},
+  });
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   useEffect(() => {
     fetchItems();
     fetchDynamicOptions();
   }, []);
+
+  useEffect(() => {
+    if (filters.length > 0) {
+      fetchFilterOptions();
+    }
+  }, [filters.length]);
+
+  const fetchFilterOptions = async () => {
+    for (const filter of filters) {
+      try {
+        const endpoint = filter.endpoint.includes('?')
+          ? `${filter.endpoint}&isActive=true`
+          : `${filter.endpoint}?isActive=true`;
+        const response = await apiService.get(endpoint);
+        const data = response.data || [];
+        setFilterOptionsData(prev => ({ ...prev, [filter.key]: data }));
+      } catch (error) {
+        console.error(`Error fetching filter options for ${filter.key}:`, error);
+      }
+    }
+  };
 
   const fetchDynamicOptions = async () => {
     const fieldsWithEndpoints = fields.filter(f => f.optionsEndpoint);
@@ -160,7 +218,13 @@ export default function ReferenceDataPage({
     setEditingItem(null);
     const initialData: Record<string, any> = {};
     fields.forEach(field => {
-      initialData[field.key] = field.type === 'checkbox' ? false : '';
+      if (field.type === 'checkbox') {
+        initialData[field.key] = false;
+      } else if (field.type === 'multiselect') {
+        initialData[field.key] = [];
+      } else {
+        initialData[field.key] = '';
+      }
     });
     setFormData(initialData);
     setError('');
@@ -179,8 +243,17 @@ export default function ReferenceDataPage({
           value = value?.[k];
         }
         editData[field.key] = value || '';
+      } else if (field.type === 'multiselect') {
+        // Use custom function to extract values if provided
+        if (field.getValuesFromItem) {
+          editData[field.key] = field.getValuesFromItem(item);
+        } else {
+          editData[field.key] = item[field.key] ?? [];
+        }
+      } else if (field.type === 'checkbox') {
+        editData[field.key] = item[field.key] ?? false;
       } else {
-        editData[field.key] = item[field.key] ?? (field.type === 'checkbox' ? false : '');
+        editData[field.key] = item[field.key] ?? '';
       }
     });
     setFormData(editData);
@@ -188,16 +261,66 @@ export default function ReferenceDataPage({
     setShowModal(true);
   };
 
-  const handleDelete = async (item: any) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
-
-    try {
-      await apiService.delete(`${endpoint}/${item.id}`);
-      fetchItems();
-    } catch (error: any) {
-      alert(error.message || 'Failed to delete item');
-    }
+  const handleDelete = (item: any) => {
+    setConfirmModal({
+      isOpen: true,
+      title: `Delete ${itemName}`,
+      message: `Are you sure you want to delete this ${itemName.toLowerCase()}? This action cannot be undone.`,
+      variant: 'danger',
+      confirmText: 'Delete',
+      onConfirm: async () => {
+        setConfirmLoading(true);
+        try {
+          await apiService.delete(`${endpoint}/${item.id}`);
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          fetchItems();
+        } catch (error: any) {
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          alert(error.message || 'Failed to delete item');
+        } finally {
+          setConfirmLoading(false);
+        }
+      },
+    });
   };
+
+  const handleToggleActive = (item: any) => {
+    const newStatus = !item.isActive;
+    const action = newStatus ? 'activate' : 'make inactive';
+    const actionTitle = newStatus ? 'Activate' : 'Make Inactive';
+
+    setConfirmModal({
+      isOpen: true,
+      title: `${actionTitle} ${itemName}`,
+      message: `Are you sure you want to ${action} this ${itemName.toLowerCase()}?`,
+      variant: newStatus ? 'info' : 'warning',
+      confirmText: actionTitle,
+      onConfirm: async () => {
+        setConfirmLoading(true);
+        try {
+          await apiService.put(`${endpoint}/${item.id}`, { isActive: newStatus });
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          fetchItems();
+        } catch (error: any) {
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          alert(error.message || `Failed to ${action} item`);
+        } finally {
+          setConfirmLoading(false);
+        }
+      },
+    });
+  };
+
+  // State for error modal
+  const [errorModal, setErrorModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,13 +344,56 @@ export default function ReferenceDataPage({
       setShowModal(false);
       fetchItems();
     } catch (error: any) {
-      setError(error.message || 'Failed to save item');
+      const errorMessage = error.message || 'Failed to save item';
+
+      // Check if this is a conflict/duplicate error (409 Conflict)
+      const isConflictError =
+        errorMessage.toLowerCase().includes('already exists') ||
+        errorMessage.toLowerCase().includes('duplicate') ||
+        errorMessage.toLowerCase().includes('unique constraint') ||
+        errorMessage.includes('409');
+
+      if (isConflictError) {
+        // Close the form modal first
+        setShowModal(false);
+        // Show styled error modal for conflict errors
+        setErrorModal({
+          isOpen: true,
+          title: 'Already Exists',
+          message: `${itemName} with this name or code already exists. Please use a different name or code.`,
+        });
+      } else {
+        // For other errors, show inline in the form
+        setError(errorMessage);
+      }
     } finally {
       setSaving(false);
     }
   };
 
   const filteredItems = items.filter(item => {
+    // Apply dropdown filters
+    for (const filter of filters) {
+      const filterValue = filterValues[filter.key];
+      if (filterValue) {
+        // Get item value based on filterPath or direct key
+        let itemValue: any;
+        if (filter.filterPath) {
+          const keys = filter.filterPath.split('.');
+          itemValue = item;
+          for (const k of keys) {
+            itemValue = itemValue?.[k];
+          }
+        } else {
+          itemValue = item[filter.key];
+        }
+        if (itemValue !== filterValue) {
+          return false;
+        }
+      }
+    }
+
+    // Apply text search
     if (!search) return true;
     const searchLower = search.toLowerCase();
     return columns.some(col => {
@@ -249,19 +415,46 @@ export default function ReferenceDataPage({
         </Button>
       </div>
 
-      {/* Search */}
+      {/* Search and Filters */}
       <div className="card p-4">
-        <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder={searchPlaceholder}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input-modern !pl-10"
-          />
+        <div className={`flex flex-col sm:flex-row gap-4 ${filters.length > 0 ? '' : ''}`}>
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-modern !pl-10"
+            />
+          </div>
+
+          {/* Filter Dropdowns */}
+          {filters.map(filter => {
+            const options = filterOptionsData[filter.key] || [];
+            const labelKey = filter.optionLabelKey || 'name';
+            const valueKey = filter.optionValueKey || 'id';
+
+            return (
+              <div key={filter.key} className="sm:w-64">
+                <select
+                  value={filterValues[filter.key] || ''}
+                  onChange={(e) => setFilterValues(prev => ({ ...prev, [filter.key]: e.target.value }))}
+                  className="input-modern dark:bg-dark-700 dark:border-dark-600"
+                >
+                  <option value="">All {filter.label}s</option>
+                  {options.map((opt: any) => (
+                    <option key={opt[valueKey]} value={opt[valueKey]}>
+                      {opt[labelKey]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -310,15 +503,41 @@ export default function ReferenceDataPage({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
-                        <button
-                          onClick={() => handleDelete(item)}
-                          className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-dark-500 hover:text-red-500 transition-colors"
-                          title="Delete"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+                        {showToggleActive && (
+                          <button
+                            onClick={() => handleToggleActive(item)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              item.isActive
+                                ? 'hover:bg-orange-50 dark:hover:bg-orange-900/20 text-dark-500 hover:text-orange-500'
+                                : 'hover:bg-green-50 dark:hover:bg-green-900/20 text-dark-500 hover:text-green-500'
+                            }`}
+                            title={item.isActive ? 'Inactive' : 'Activate'}
+                          >
+                            {item.isActive ? (
+                              // Eye-slash icon for deactivate
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                              </svg>
+                            ) : (
+                              // Eye icon for activate
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            )}
+                          </button>
+                        )}
+                        {!hideDelete && (
+                          <button
+                            onClick={() => handleDelete(item)}
+                            className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-dark-500 hover:text-red-500 transition-colors"
+                            title="Delete"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -357,8 +576,8 @@ export default function ReferenceDataPage({
 
               {fields.map(field => {
                 // For dependent fields, check if parent is selected
-                const isDisabled = field.dependsOn && !formData[field.dependsOn];
-                const options = field.type === 'select'
+                const isDisabled = !!(field.dependsOn && !formData[field.dependsOn]);
+                const options = (field.type === 'select' || field.type === 'multiselect')
                   ? (field.optionsEndpoint ? getFilteredOptions(field) : field.options || [])
                   : [];
 
@@ -367,7 +586,37 @@ export default function ReferenceDataPage({
                     <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
                       {field.label} {field.required && !field.isFilterOnly && <span className="text-red-500">*</span>}
                     </label>
-                    {field.type === 'select' ? (
+                    {field.type === 'multiselect' ? (
+                      <div className="border border-dark-200 dark:border-dark-600 rounded-xl p-3 max-h-48 overflow-y-auto bg-white dark:bg-dark-700">
+                        {options.length === 0 ? (
+                          <p className="text-sm text-dark-400">No options available</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {options.map(opt => {
+                              const isChecked = (formData[field.key] || []).includes(opt.value);
+                              return (
+                                <label key={opt.value} className="flex items-center gap-2 cursor-pointer hover:bg-dark-50 dark:hover:bg-dark-600 p-1.5 rounded-lg transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const currentValues = formData[field.key] || [];
+                                      if (e.target.checked) {
+                                        handleFieldChange(field.key, [...currentValues, opt.value]);
+                                      } else {
+                                        handleFieldChange(field.key, currentValues.filter((v: string) => v !== opt.value));
+                                      }
+                                    }}
+                                    className="w-4 h-4 rounded border-dark-300 text-primary-500 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm text-dark-700 dark:text-dark-300">{opt.label}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ) : field.type === 'select' ? (
                       <select
                         value={formData[field.key] || ''}
                         onChange={(e) => handleFieldChange(field.key, e.target.value)}
@@ -434,6 +683,30 @@ export default function ReferenceDataPage({
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmText={confirmModal.confirmText}
+        isLoading={confirmLoading}
+      />
+
+      {/* Error Modal for duplicate/conflict errors */}
+      <ConfirmModal
+        isOpen={errorModal.isOpen}
+        onClose={() => setErrorModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={() => setErrorModal(prev => ({ ...prev, isOpen: false }))}
+        title={errorModal.title}
+        message={errorModal.message}
+        variant="warning"
+        confirmText="OK"
+        cancelText=""
+      />
     </div>
   );
 }
