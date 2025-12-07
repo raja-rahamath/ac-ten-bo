@@ -10,6 +10,17 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
     </svg>
   ),
+  eyeOpen: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+  ),
+  eyeClosed: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+    </svg>
+  ),
 };
 
 interface User {
@@ -51,6 +62,7 @@ export default function UsersPage() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -84,6 +96,7 @@ export default function UsersPage() {
       isActive: true,
     });
     setError('');
+    setShowPassword(false);
     setShowModal(true);
   };
 
@@ -99,6 +112,7 @@ export default function UsersPage() {
       isActive: user.isActive,
     });
     setError('');
+    setShowPassword(false);
     setShowModal(true);
   };
 
@@ -274,7 +288,7 @@ export default function UsersPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-dark-800 dark:text-white">
@@ -348,14 +362,23 @@ export default function UsersPage() {
                 <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
                   Password {!editingUser && <span className="text-red-500">*</span>}
                 </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="input-modern dark:bg-dark-700 dark:border-dark-600"
-                  placeholder={editingUser ? 'Leave blank to keep current' : 'Enter password'}
-                  required={!editingUser}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="input-modern dark:bg-dark-700 dark:border-dark-600 pr-10"
+                    placeholder={editingUser ? 'Leave blank to keep current' : 'Enter password'}
+                    required={!editingUser}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-400 hover:text-dark-600 dark:hover:text-dark-300"
+                  >
+                    {showPassword ? Icons.eyeClosed : Icons.eyeOpen}
+                  </button>
+                </div>
               </div>
 
               <div>

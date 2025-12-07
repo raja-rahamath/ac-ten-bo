@@ -15,38 +15,110 @@ interface ServiceRequest {
   createdAt: string;
   startedAt?: string;
   completedAt?: string;
-  customer?: { firstName: string; lastName: string };
-  complaintType?: { name: string };
+  customer?: { id: string; firstName: string; lastName: string };
+  complaintType?: { id: string; name: string };
   assignedTo?: { id: string; firstName: string; lastName: string };
   zone?: { id: string; name: string };
+  unit?: { id: string; unitNo: string; flatNumber?: string; building?: { id: string; name?: string } };
+  property?: { id: string; name: string };
+}
+
+interface Customer {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
+interface Employee {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
+interface ComplaintType {
+  id: string;
+  name: string;
 }
 
 export default function RequestsPage() {
   const { isTechnician, userZones } = useAuth();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState('ALL');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+  const [customerFilter, setCustomerFilter] = useState('');
+  const [assignedToFilter, setAssignedToFilter] = useState('');
+  const [complaintTypeFilter, setComplaintTypeFilter] = useState('');
+  const [dateFromFilter, setDateFromFilter] = useState('');
+  const [dateToFilter, setDateToFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Dropdown data
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [complaintTypes, setComplaintTypes] = useState<ComplaintType[]>([]);
+
+  useEffect(() => {
+    fetchDropdownData();
+  }, []);
+
   useEffect(() => {
     fetchRequests();
-  }, [page, filter, isTechnician, userZones]);
+  }, [page, statusFilter, priorityFilter, customerFilter, assignedToFilter, complaintTypeFilter, dateFromFilter, dateToFilter, searchQuery, isTechnician, userZones]);
+
+  async function fetchDropdownData() {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const [customersRes, employeesRes, typesRes] = await Promise.all([
+        fetch('http://localhost:4001/api/v1/customers?limit=100', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('http://localhost:4001/api/v1/employees?isActive=true&limit=100', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('http://localhost:4001/api/v1/complaint-types', { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+
+      const [customersData, employeesData, typesData] = await Promise.all([
+        customersRes.json(),
+        employeesRes.json(),
+        typesRes.json(),
+      ]);
+
+      if (customersData.success) setCustomers(customersData.data || []);
+      if (employeesData.success) setEmployees(employeesData.data || []);
+      if (typesData.success) setComplaintTypes(typesData.data || []);
+    } catch (error) {
+      console.error('Failed to fetch dropdown data:', error);
+    }
+  }
 
   async function fetchRequests() {
     try {
+      setIsLoading(true);
       const token = localStorage.getItem('accessToken');
-      const statusParam = filter !== 'ALL' ? `&status=${filter}` : '';
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', '20');
+
+      if (statusFilter) params.append('status', statusFilter);
+      if (priorityFilter) params.append('priority', priorityFilter);
+      if (customerFilter) params.append('customerId', customerFilter);
+      if (assignedToFilter) params.append('assignedEmployeeId', assignedToFilter);
+      if (complaintTypeFilter) params.append('complaintTypeId', complaintTypeFilter);
+      if (dateFromFilter) params.append('dateFrom', dateFromFilter);
+      if (dateToFilter) params.append('dateTo', dateToFilter);
+      if (searchQuery) params.append('search', searchQuery);
 
       // For technicians, filter by their assigned zones
-      let zoneParam = '';
       if (isTechnician && userZones.length > 0) {
         const zoneIds = userZones.map((z) => z.zoneId).join(',');
-        zoneParam = `&zoneIds=${zoneIds}`;
+        params.append('zoneIds', zoneIds);
       }
 
       const response = await fetch(
-        `http://localhost:4001/api/v1/service-requests?page=${page}&limit=20${statusParam}${zoneParam}`,
+        `http://localhost:4001/api/v1/service-requests?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();
@@ -61,6 +133,20 @@ export default function RequestsPage() {
       setIsLoading(false);
     }
   }
+
+  function clearFilters() {
+    setStatusFilter('');
+    setPriorityFilter('');
+    setCustomerFilter('');
+    setAssignedToFilter('');
+    setComplaintTypeFilter('');
+    setDateFromFilter('');
+    setDateToFilter('');
+    setSearchQuery('');
+    setPage(1);
+  }
+
+  const hasActiveFilters = statusFilter || priorityFilter || customerFilter || assignedToFilter || complaintTypeFilter || dateFromFilter || dateToFilter || searchQuery;
 
   function getStatusColor(status: string) {
     const colors: Record<string, string> = {
@@ -83,7 +169,6 @@ export default function RequestsPage() {
     return colors[priority] || 'text-gray-600 dark:text-gray-400';
   }
 
-  // Format date as dd/mm/yyyy hh:mm AM/PM
   function formatDateTime(dateString: string): string {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');
@@ -96,26 +181,6 @@ export default function RequestsPage() {
     return `${day}/${month}/${year} ${displayHours}:${minutes} ${ampm}`;
   }
 
-  // Calculate duration between two dates
-  function calculateDuration(startDate: string, endDate?: string): string {
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : new Date();
-    const diffMs = end.getTime() - start.getTime();
-
-    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-    const days = Math.floor(hours / 24);
-    const remainingHours = hours % 24;
-
-    if (days > 0) {
-      return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
-    }
-    if (hours > 0) {
-      return `${hours}h`;
-    }
-    const minutes = Math.floor(diffMs / (1000 * 60));
-    return `${minutes}m`;
-  }
-
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
@@ -125,19 +190,166 @@ export default function RequestsPage() {
         </Button>
       </div>
 
-      {/* Filters */}
+      {/* Search and Filter Toggle */}
+      <div className="mb-4 flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Search by request #, title, or description..."
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+            className="w-full px-4 py-2 border border-dark-200 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-800 text-dark-900 dark:text-dark-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`px-4 py-2 rounded-lg border flex items-center gap-2 transition-colors ${
+            showFilters || hasActiveFilters
+              ? 'bg-primary-500 text-white border-primary-500'
+              : 'bg-white dark:bg-dark-800 text-dark-600 dark:text-dark-300 border-dark-200 dark:border-dark-600 hover:bg-dark-50 dark:hover:bg-dark-700'
+          }`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          Filters
+          {hasActiveFilters && (
+            <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">Active</span>
+          )}
+        </button>
+      </div>
+
+      {/* Filter Panel */}
+      {showFilters && (
+        <div className="mb-6 p-4 bg-white dark:bg-dark-800 rounded-xl border border-dark-100 dark:border-dark-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                className="w-full px-3 py-2 border border-dark-200 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-dark-900 dark:text-dark-100"
+              >
+                <option value="">All Statuses</option>
+                <option value="NEW">New</option>
+                <option value="ASSIGNED">Assigned</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+
+            {/* Priority */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Priority</label>
+              <select
+                value={priorityFilter}
+                onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }}
+                className="w-full px-3 py-2 border border-dark-200 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-dark-900 dark:text-dark-100"
+              >
+                <option value="">All Priorities</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="URGENT">Urgent</option>
+              </select>
+            </div>
+
+            {/* Customer */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Customer</label>
+              <select
+                value={customerFilter}
+                onChange={(e) => { setCustomerFilter(e.target.value); setPage(1); }}
+                className="w-full px-3 py-2 border border-dark-200 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-dark-900 dark:text-dark-100"
+              >
+                <option value="">All Customers</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Assigned To */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Assigned To</label>
+              <select
+                value={assignedToFilter}
+                onChange={(e) => { setAssignedToFilter(e.target.value); setPage(1); }}
+                className="w-full px-3 py-2 border border-dark-200 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-dark-900 dark:text-dark-100"
+              >
+                <option value="">All Employees</option>
+                {employees.map((e) => (
+                  <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Request Type */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">Request Type</label>
+              <select
+                value={complaintTypeFilter}
+                onChange={(e) => { setComplaintTypeFilter(e.target.value); setPage(1); }}
+                className="w-full px-3 py-2 border border-dark-200 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-dark-900 dark:text-dark-100"
+              >
+                <option value="">All Types</option>
+                {complaintTypes.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Date From */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">From Date</label>
+              <input
+                type="date"
+                value={dateFromFilter}
+                onChange={(e) => { setDateFromFilter(e.target.value); setPage(1); }}
+                className="w-full px-3 py-2 border border-dark-200 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-dark-900 dark:text-dark-100"
+              />
+            </div>
+
+            {/* Date To */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">To Date</label>
+              <input
+                type="date"
+                value={dateToFilter}
+                onChange={(e) => { setDateToFilter(e.target.value); setPage(1); }}
+                className="w-full px-3 py-2 border border-dark-200 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-dark-900 dark:text-dark-100"
+              />
+            </div>
+
+            {/* Clear Filters */}
+            <div className="flex items-end">
+              <button
+                onClick={clearFilters}
+                disabled={!hasActiveFilters}
+                className="w-full px-4 py-2 text-sm font-medium rounded-lg border border-dark-200 dark:border-dark-600 text-dark-700 dark:text-dark-300 disabled:opacity-50 hover:bg-dark-50 dark:hover:bg-dark-700"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Status Filters */}
       <div className="mb-6 flex flex-wrap gap-2">
-        {['ALL', 'NEW', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((status) => (
+        {['', 'NEW', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((status) => (
           <button
-            key={status}
-            onClick={() => { setFilter(status); setPage(1); }}
+            key={status || 'ALL'}
+            onClick={() => { setStatusFilter(status); setPage(1); }}
             className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              filter === status
+              statusFilter === status
                 ? 'bg-primary-500 text-white'
                 : 'bg-white dark:bg-dark-800 text-dark-600 dark:text-dark-300 border border-dark-200 dark:border-dark-600 hover:bg-dark-50 dark:hover:bg-dark-700'
             }`}
           >
-            {status.replace('_', ' ')}
+            {status ? status.replace('_', ' ') : 'ALL'}
           </button>
         ))}
       </div>

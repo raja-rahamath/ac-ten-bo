@@ -73,6 +73,18 @@ interface RecentRequest {
   customer?: { firstName: string; lastName: string };
 }
 
+// Widget key to stat card mapping
+const WIDGET_KEY_MAP: Record<string, string> = {
+  'total_requests': 'Total Requests',
+  'new_requests': 'New Requests',
+  'in_progress_requests': 'In Progress',
+  'completed_requests': 'Completed',
+  'customers': 'Customers',
+  'employees': 'Employees',
+  'pending_invoices': 'Pending Invoices',
+  'revenue': 'Revenue',
+};
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats>({
     totalRequests: 0,
@@ -86,10 +98,27 @@ export default function DashboardPage() {
   });
   const [recentRequests, setRecentRequests] = useState<RecentRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [allowedWidgets, setAllowedWidgets] = useState<string[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchAllowedWidgets();
   }, []);
+
+  async function fetchAllowedWidgets() {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch('http://localhost:4001/api/v1/menus/me/dashboard-widgets', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAllowedWidgets(data.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch allowed widgets:', error);
+    }
+  }
 
   async function fetchDashboardData() {
     try {
@@ -117,7 +146,7 @@ export default function DashboardPage() {
           ...prev,
           totalRequests: requestsData.pagination?.total || requests.length,
           newRequests: requests.filter((r: any) => r.status === 'NEW').length,
-          inProgressRequests: requests.filter((r: any) => ['ASSIGNED', 'IN_PROGRESS'].includes(r.status)).length,
+          inProgressRequests: requests.filter((r: any) => !['NEW', 'COMPLETED', 'CANCELLED'].includes(r.status)).length,
           completedRequests: requests.filter((r: any) => r.status === 'COMPLETED').length,
         }));
       }
@@ -176,16 +205,24 @@ export default function DashboardPage() {
     );
   }
 
-  const statCards = [
-    { title: 'Total Requests', value: stats.totalRequests, icon: Icons.clipboard, gradient: 'stat-blue', trend: '+12%' },
-    { title: 'New Requests', value: stats.newRequests, icon: Icons.sparkles, gradient: 'stat-indigo', trend: '+5' },
-    { title: 'In Progress', value: stats.inProgressRequests, icon: Icons.clock, gradient: 'stat-orange', trend: null },
-    { title: 'Completed', value: stats.completedRequests, icon: Icons.check, gradient: 'stat-green', trend: '+8' },
-    { title: 'Customers', value: stats.totalCustomers, icon: Icons.users, gradient: 'stat-purple', trend: '+3%' },
-    { title: 'Employees', value: stats.totalEmployees, icon: Icons.briefcase, gradient: 'stat-pink', trend: null },
-    { title: 'Pending Invoices', value: stats.pendingInvoices, icon: Icons.document, gradient: 'stat-orange', trend: '-2' },
-    { title: 'Revenue', value: `$${stats.revenue.toLocaleString()}`, icon: Icons.currency, gradient: 'stat-green', trend: '+18%' },
+  const allStatCards = [
+    { key: 'total_requests', title: 'Total Requests', value: stats.totalRequests, icon: Icons.clipboard, gradient: 'stat-blue', trend: '+12%' },
+    { key: 'new_requests', title: 'New Requests', value: stats.newRequests, icon: Icons.sparkles, gradient: 'stat-indigo', trend: '+5' },
+    { key: 'in_progress_requests', title: 'In Progress', value: stats.inProgressRequests, icon: Icons.clock, gradient: 'stat-orange', trend: null },
+    { key: 'completed_requests', title: 'Completed', value: stats.completedRequests, icon: Icons.check, gradient: 'stat-green', trend: '+8' },
+    { key: 'customers', title: 'Customers', value: stats.totalCustomers, icon: Icons.users, gradient: 'stat-purple', trend: '+3%' },
+    { key: 'employees', title: 'Employees', value: stats.totalEmployees, icon: Icons.briefcase, gradient: 'stat-pink', trend: null },
+    { key: 'pending_invoices', title: 'Pending Invoices', value: stats.pendingInvoices, icon: Icons.document, gradient: 'stat-orange', trend: '-2' },
+    { key: 'revenue', title: 'Revenue', value: `$${stats.revenue.toLocaleString()}`, icon: Icons.currency, gradient: 'stat-green', trend: '+18%' },
   ];
+
+  // Filter stat cards based on allowed widgets (empty array = show all for backward compatibility)
+  const statCards = allowedWidgets.length > 0
+    ? allStatCards.filter(card => allowedWidgets.includes(card.key))
+    : allStatCards;
+
+  // Check if recent requests table should be shown
+  const showRecentRequests = allowedWidgets.length === 0 || allowedWidgets.includes('recent_requests');
 
   return (
     <div className="space-y-8">
@@ -227,6 +264,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Requests */}
+      {showRecentRequests && (
       <div className="card-modern overflow-hidden dark:bg-dark-800 dark:border-dark-700">
         <div className="flex items-center justify-between border-b border-dark-100 dark:border-dark-700 px-6 py-4">
           <div>
@@ -312,6 +350,7 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

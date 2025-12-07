@@ -16,10 +16,24 @@ interface Role {
   displayNameAr?: string;
   description?: string;
   permissions?: Permission[];
+  dashboardWidgets?: string[];
   isSystem: boolean;
   isActive: boolean;
   createdAt: string;
 }
+
+// Available dashboard widgets
+const DASHBOARD_WIDGETS = [
+  { key: 'total_requests', label: 'Total Requests', group: 'Service Requests' },
+  { key: 'new_requests', label: 'New Requests', group: 'Service Requests' },
+  { key: 'in_progress_requests', label: 'In Progress Requests', group: 'Service Requests' },
+  { key: 'completed_requests', label: 'Completed Requests', group: 'Service Requests' },
+  { key: 'recent_requests', label: 'Recent Requests Table', group: 'Service Requests' },
+  { key: 'customers', label: 'Total Customers', group: 'CRM' },
+  { key: 'employees', label: 'Total Employees', group: 'HR' },
+  { key: 'pending_invoices', label: 'Pending Invoices', group: 'Financial' },
+  { key: 'revenue', label: 'Revenue', group: 'Financial' },
+];
 
 const AVAILABLE_PERMISSIONS = [
   // Core
@@ -85,6 +99,7 @@ export default function RolesPage() {
     description: '',
     isActive: true,
     permissions: [] as string[],
+    dashboardWidgets: [] as string[],
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -114,6 +129,7 @@ export default function RolesPage() {
       description: '',
       isActive: true,
       permissions: [],
+      dashboardWidgets: [],
     });
     setError('');
     setShowModal(true);
@@ -128,6 +144,7 @@ export default function RolesPage() {
       description: role.description || '',
       isActive: role.isActive ?? true,
       permissions: getPermissionStrings(role.permissions),
+      dashboardWidgets: role.dashboardWidgets || [],
     });
     setError('');
     setShowModal(true);
@@ -167,6 +184,39 @@ export default function RolesPage() {
       }));
     }
   };
+
+  const handleWidgetToggle = (widgetKey: string) => {
+    setFormData(prev => ({
+      ...prev,
+      dashboardWidgets: prev.dashboardWidgets.includes(widgetKey)
+        ? prev.dashboardWidgets.filter(w => w !== widgetKey)
+        : [...prev.dashboardWidgets, widgetKey],
+    }));
+  };
+
+  const handleWidgetGroupToggle = (groupWidgets: string[]) => {
+    const allSelected = groupWidgets.every(w => formData.dashboardWidgets.includes(w));
+    if (allSelected) {
+      setFormData(prev => ({
+        ...prev,
+        dashboardWidgets: prev.dashboardWidgets.filter(w => !groupWidgets.includes(w)),
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        dashboardWidgets: [...new Set([...prev.dashboardWidgets, ...groupWidgets])],
+      }));
+    }
+  };
+
+  // Group widgets by their group property
+  const widgetsByGroup = DASHBOARD_WIDGETS.reduce((acc, widget) => {
+    if (!acc[widget.group]) {
+      acc[widget.group] = [];
+    }
+    acc[widget.group].push(widget);
+    return acc;
+  }, {} as Record<string, typeof DASHBOARD_WIDGETS>);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -380,6 +430,41 @@ export default function RolesPage() {
                               className="w-3.5 h-3.5 rounded border-dark-300 text-primary-500 focus:ring-primary-500"
                             />
                             <span className="text-sm text-dark-600 dark:text-dark-400">{perm.split(':')[1]}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-3">
+                  Dashboard Widgets
+                  <span className="ml-2 text-xs font-normal text-dark-500">(Select widgets to show on dashboard)</span>
+                </label>
+                <div className="space-y-4 max-h-48 overflow-y-auto border border-dark-200 dark:border-dark-600 rounded-lg p-4">
+                  {Object.entries(widgetsByGroup).map(([groupName, widgets]) => (
+                    <div key={groupName}>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={widgets.every(w => formData.dashboardWidgets.includes(w.key))}
+                          onChange={() => handleWidgetGroupToggle(widgets.map(w => w.key))}
+                          className="w-4 h-4 rounded border-dark-300 text-primary-500 focus:ring-primary-500"
+                        />
+                        <span className="font-medium text-dark-800 dark:text-white">{groupName}</span>
+                      </label>
+                      <div className="ml-6 mt-2 flex flex-wrap gap-2">
+                        {widgets.map((widget) => (
+                          <label key={widget.key} className="flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formData.dashboardWidgets.includes(widget.key)}
+                              onChange={() => handleWidgetToggle(widget.key)}
+                              className="w-3.5 h-3.5 rounded border-dark-300 text-primary-500 focus:ring-primary-500"
+                            />
+                            <span className="text-sm text-dark-600 dark:text-dark-400">{widget.label}</span>
                           </label>
                         ))}
                       </div>

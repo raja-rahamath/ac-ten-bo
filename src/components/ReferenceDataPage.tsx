@@ -70,6 +70,7 @@ export default function ReferenceDataPage({
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [viewingItem, setViewingItem] = useState<any>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -205,7 +206,9 @@ export default function ReferenceDataPage({
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const response = await apiService.get(endpoint);
+      // Fetch all items by setting a high limit (reference data is typically small)
+      const separator = endpoint.includes('?') ? '&' : '?';
+      const response = await apiService.get(`${endpoint}${separator}limit=1000`);
       setItems(response.data || []);
     } catch (error) {
       console.error('Error fetching items:', error);
@@ -344,7 +347,19 @@ export default function ReferenceDataPage({
       setShowModal(false);
       fetchItems();
     } catch (error: any) {
-      const errorMessage = error.message || 'Failed to save item';
+      // Handle different error formats - API might return error.message or error.error or error itself
+      let errorMessage = 'Failed to save item';
+      if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error?.message && typeof error.message === 'string') {
+        errorMessage = error.message;
+      } else if (error?.error && typeof error.error === 'string') {
+        errorMessage = error.error;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
 
       // Check if this is a conflict/duplicate error (409 Conflict)
       const isConflictError =
@@ -494,6 +509,16 @@ export default function ReferenceDataPage({
                     ))}
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setViewingItem(item)}
+                          className="p-1.5 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-600 text-dark-500 hover:text-blue-500 transition-colors"
+                          title="View"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
                         <button
                           onClick={() => handleEdit(item)}
                           className="p-1.5 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-600 text-dark-500 hover:text-primary-500 transition-colors"
@@ -707,6 +732,90 @@ export default function ReferenceDataPage({
         confirmText="OK"
         cancelText=""
       />
+
+      {/* View Details Modal */}
+      {viewingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setViewingItem(null)} />
+          <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-dark-800 dark:text-white">
+                {itemName} Details
+              </h3>
+              <button
+                onClick={() => setViewingItem(null)}
+                className="p-1 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 text-dark-500"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Display all columns data */}
+              {columns.map(col => (
+                <div key={col.key} className="flex flex-col">
+                  <span className="text-xs font-medium text-dark-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                    {col.label}
+                  </span>
+                  <span className="text-sm text-dark-800 dark:text-dark-200">
+                    {col.render ? col.render(viewingItem[col.key], viewingItem) : (viewingItem[col.key] || '-')}
+                  </span>
+                </div>
+              ))}
+
+              {/* Audit Information Section */}
+              <div className="border-t border-dark-200 dark:border-dark-600 pt-4 mt-4">
+                <h4 className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3">Audit Information</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-dark-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                      Created Date
+                    </span>
+                    <span className="text-sm text-dark-800 dark:text-dark-200">
+                      {viewingItem.createdAt ? new Date(viewingItem.createdAt).toLocaleString() : '-'}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-dark-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                      Created By
+                    </span>
+                    <span className="text-sm text-dark-800 dark:text-dark-200">
+                      {viewingItem.createdByName || viewingItem.createdBy?.name || viewingItem.createdById || '-'}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-dark-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                      Last Modified
+                    </span>
+                    <span className="text-sm text-dark-800 dark:text-dark-200">
+                      {viewingItem.updatedAt ? new Date(viewingItem.updatedAt).toLocaleString() : '-'}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-dark-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                      Modified By
+                    </span>
+                    <span className="text-sm text-dark-800 dark:text-dark-200">
+                      {viewingItem.updatedByName || viewingItem.updatedBy?.name || viewingItem.updatedById || '-'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setViewingItem(null)}
+                className="px-4 py-2.5 rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

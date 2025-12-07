@@ -121,8 +121,10 @@ class ApiClient {
     }
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || error.error || `Request failed: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      // Handle nested error format: { success: false, error: { code, message } }
+      const errorMessage = errorData?.error?.message || errorData?.message || errorData?.error || `Request failed: ${response.status}`;
+      throw new Error(errorMessage);
     }
 
     return response.json();

@@ -414,6 +414,7 @@ export default function EditEmployeePage() {
           jobTitleId: selectedJobTitle || undefined,
           managerId: selectedManager || undefined,
           isActive,
+          zoneIds: selectedZones,
         }),
       });
 

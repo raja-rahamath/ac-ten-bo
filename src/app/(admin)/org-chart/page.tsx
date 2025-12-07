@@ -347,6 +347,11 @@ export default function OrgChartPage() {
           <p className="text-xs text-dark-500 dark:text-dark-400 truncate mt-0.5">
             {node.jobTitle?.name || 'No title'}
           </p>
+          {node.department && (
+            <p className="text-xs text-primary-500 dark:text-primary-400 truncate mt-0.5">
+              {node.department.name}
+            </p>
+          )}
           {!node.isActive && (
             <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
               Inactive

@@ -1087,14 +1087,6 @@ export default function AdminLayout({
                         {Icons.key}
                         <span>{t('change-password')}</span>
                       </button>
-                      <Link
-                        href="/settings"
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-dark-700 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        {Icons.settings}
-                        <span>{t('settings')}</span>
-                      </Link>
                     </div>
 
                     {/* Sign Out */}

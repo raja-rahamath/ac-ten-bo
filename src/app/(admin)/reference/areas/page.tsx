@@ -18,15 +18,6 @@ export default function AreasPage() {
           render: (_value, item) => item.governorate?.name || '-',
         },
         {
-          key: 'zonesCount',
-          label: 'Zones',
-          render: (_value, item) => (
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-              {item._count?.zones || 0} zones
-            </span>
-          ),
-        },
-        {
           key: 'isActive',
           label: 'Status',
           render: (value) => (
