@@ -116,6 +116,18 @@ interface Estimate {
   };
 }
 
+interface Invoice {
+  id: string;
+  invoiceNo: string;
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+  paidAmount?: number;
+  status: string;
+  dueDate?: string;
+  createdAt: string;
+}
+
 export default function RequestDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -186,6 +198,12 @@ export default function RequestDetailPage() {
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [loadingEstimates, setLoadingEstimates] = useState(false);
 
+  // Invoices state
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [invoiceError, setInvoiceError] = useState('');
+
   // Cancel Request Modal state
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -194,6 +212,7 @@ export default function RequestDetailPage() {
   useEffect(() => {
     fetchRequest();
     fetchEstimates();
+    fetchInvoices();
     // Get user role from localStorage
     const userData = localStorage.getItem('user');
     if (userData) {
@@ -242,6 +261,55 @@ export default function RequestDetailPage() {
       console.error('Failed to fetch estimates:', error);
     } finally {
       setLoadingEstimates(false);
+    }
+  }
+
+  async function fetchInvoices() {
+    try {
+      setLoadingInvoices(true);
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:4001/api/v1/invoices?serviceRequestId=${params.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+
+      if (data.success || data.data) {
+        setInvoices(data.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch invoices:', error);
+    } finally {
+      setLoadingInvoices(false);
+    }
+  }
+
+  async function generateInvoice() {
+    setGeneratingInvoice(true);
+    setInvoiceError('');
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:4001/api/v1/invoices/from-service-request/${params.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Failed to generate invoice');
+      }
+
+      // Refresh invoices list
+      await fetchInvoices();
+      // Navigate to the new invoice
+      router.push(`/invoices/${data.data.id}`);
+    } catch (error: any) {
+      setInvoiceError(error.message);
+    } finally {
+      setGeneratingInvoice(false);
     }
   }
 
@@ -811,6 +879,46 @@ export default function RequestDetailPage() {
     return colors[status] || 'bg-gray-100 text-gray-800';
   }
 
+  // Get timeline dot color based on status for STATUS_CHANGED entries
+  function getTimelineDotColor(action: string, description?: string) {
+    if (action === 'STATUS_CHANGED' && description) {
+      // Parse "Status changed from X to Y" to get the new status
+      const match = description.match(/to\s+(\w+)/i);
+      if (match) {
+        const status = match[1].toUpperCase();
+        const colors: Record<string, string> = {
+          NEW: 'bg-blue-500',
+          ASSIGNED: 'bg-yellow-500',
+          IN_PROGRESS: 'bg-purple-500',
+          COMPLETED: 'bg-green-500',
+          CANCELLED: 'bg-red-500',
+        };
+        return colors[status] || 'bg-gray-500';
+      }
+    }
+    // Default colors for other actions
+    if (action === 'REQUEST_CREATED') return 'bg-blue-500';
+    if (action === 'ASSIGNED' || action === 'AUTO_ASSIGNED') return 'bg-yellow-500';
+    if (action === 'COMPLETED') return 'bg-green-500';
+    return 'bg-gray-500';
+  }
+
+  // Extract status from timeline description and return badge
+  function getStatusBadgeFromDescription(description?: string) {
+    if (!description) return null;
+    // Parse "Status changed from X to Y"
+    const match = description.match(/from\s+(\w+)\s+to\s+(\w+)/i);
+    if (match) {
+      const toStatus = match[2].toUpperCase();
+      return (
+        <span className={`ml-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(toStatus)}`}>
+          {toStatus.replace('_', ' ')}
+        </span>
+      );
+    }
+    return null;
+  }
+
   function getPriorityColor(priority: string) {
     const colors: Record<string, string> = {
       LOW: 'bg-gray-100 text-gray-800',
@@ -1264,6 +1372,117 @@ export default function RequestDetailPage() {
             )}
           </div>
 
+          {/* Invoices Section */}
+          <div className="rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Invoices</h2>
+              {request.status === 'COMPLETED' && invoices.length === 0 && (
+                <button
+                  onClick={generateInvoice}
+                  disabled={generatingInvoice}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {generatingInvoice ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Generate Invoice
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {invoiceError && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm">
+                {invoiceError}
+              </div>
+            )}
+
+            {loadingInvoices ? (
+              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                Loading invoices...
+              </div>
+            ) : invoices.length === 0 ? (
+              <div className="py-8 text-center">
+                <svg className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-gray-500 dark:text-gray-400">No invoices generated yet</p>
+                {request.status === 'COMPLETED' ? (
+                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                    Click "Generate Invoice" to create an invoice for this completed request
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                    Complete the service request to generate an invoice
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {invoices.map((invoice) => (
+                  <Link
+                    key={invoice.id}
+                    href={`/invoices/${invoice.id}`}
+                    className="block p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                            {invoice.invoiceNo}
+                          </span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            invoice.status === 'DRAFT' ? 'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-300' :
+                            invoice.status === 'SENT' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                            invoice.status === 'PARTIAL' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                            invoice.status === 'PAID' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                            invoice.status === 'OVERDUE' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                            'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+                          }`}>
+                            {invoice.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          {formatDate(invoice.createdAt)}
+                          {invoice.dueDate && ` • Due: ${formatDate(invoice.dueDate)}`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
+                          {new Intl.NumberFormat('en-BH', {
+                            style: 'currency',
+                            currency: 'BHD',
+                            minimumFractionDigits: 3,
+                          }).format(invoice.total || 0)}
+                        </p>
+                        {invoice.paidAmount && invoice.paidAmount > 0 && (
+                          <p className="text-xs text-green-600 dark:text-green-400">
+                            Paid: {new Intl.NumberFormat('en-BH', {
+                              style: 'currency',
+                              currency: 'BHD',
+                              minimumFractionDigits: 3,
+                            }).format(invoice.paidAmount)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Comments & Activity */}
           <CommentsSection serviceRequestId={params.id as string} />
         </div>
@@ -1351,22 +1570,19 @@ export default function RequestDetailPage() {
                 request.timeline.map((entry, index) => (
                   <div key={entry.id} className="flex gap-3">
                     <div className="flex flex-col items-center">
-                      <div className={`h-2.5 w-2.5 rounded-full ${
-                        entry.action === 'REQUEST_CREATED' ? 'bg-blue-500' :
-                        entry.action === 'ASSIGNED' || entry.action === 'AUTO_ASSIGNED' ? 'bg-yellow-500' :
-                        entry.action === 'STATUS_CHANGED' ? 'bg-purple-500' :
-                        entry.action === 'COMPLETED' ? 'bg-green-500' :
-                        'bg-gray-500'
-                      }`}></div>
+                      <div className={`h-2.5 w-2.5 rounded-full ${getTimelineDotColor(entry.action, entry.description)}`}></div>
                       {index < request.timeline!.length - 1 && (
                         <div className="h-full w-0.5 bg-gray-200 dark:bg-gray-600 min-h-[16px]"></div>
                       )}
                     </div>
                     <div className="flex-1 pb-2 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                        {entry.action.replace(/_/g, ' ')}
-                      </p>
-                      {entry.description && (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {entry.action.replace(/_/g, ' ')}
+                        </p>
+                        {entry.action === 'STATUS_CHANGED' && getStatusBadgeFromDescription(entry.description)}
+                      </div>
+                      {entry.description && entry.action !== 'STATUS_CHANGED' && (
                         <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{entry.description}</p>
                       )}
                       <div className="flex flex-wrap items-center gap-1 mt-0.5">

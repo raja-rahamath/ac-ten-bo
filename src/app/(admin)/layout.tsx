@@ -202,9 +202,24 @@ export default function AdminLayout({
     const checkAutoExpand = () => {
       if (!navRef.current) return;
 
-      // Count groups with children
-      const groupCount = menuItems.filter((item: any) => item.children).length;
-      const totalItemCount = menuItems.reduce((acc: number, item: any) => {
+      // Build set of permitted hrefs from menuItems
+      const permittedSet = new Set(menuItems.map((m: any) => m.href));
+
+      // Compute permitted nav groups (same logic as permittedNavGroups)
+      const computedGroups = navGroups.map((item: any) => {
+        if (!item.children) {
+          return permittedSet.has(item.href) ? item : null;
+        }
+        const permittedChildren = item.children.filter((child: any) => permittedSet.has(child.href));
+        if (permittedChildren.length > 0) {
+          return { ...item, children: permittedChildren };
+        }
+        return null;
+      }).filter(Boolean);
+
+      // Count groups with children in the computed structure
+      const groupCount = computedGroups.filter((item: any) => item.children).length;
+      const totalItemCount = computedGroups.reduce((acc: number, item: any) => {
         if (item.children) {
           return acc + 1 + item.children.length; // Parent + children
         }
@@ -215,9 +230,9 @@ export default function AdminLayout({
       const estimatedExpandedHeight = totalItemCount * 44;
       const availableHeight = navRef.current.clientHeight;
 
-      // If expanded content would fit without scrolling, auto-expand
+      // If expanded content would fit without scrolling, auto-expand all groups
       if (estimatedExpandedHeight <= availableHeight && groupCount > 0) {
-        const allGroupIds = menuItems.filter((item: any) => item.children).map((item: any) => item.id);
+        const allGroupIds = computedGroups.filter((item: any) => item.children).map((item: any) => item.id);
         setExpandedGroups(allGroupIds);
       }
 

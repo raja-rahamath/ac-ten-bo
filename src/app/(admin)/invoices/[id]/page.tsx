@@ -21,6 +21,14 @@ interface Payment {
   reference?: string;
   notes?: string;
   receivedAt: string;
+  receipt?: Receipt;
+}
+
+interface Receipt {
+  id: string;
+  receiptNo: string;
+  amount: number;
+  issuedAt: string;
 }
 
 interface Invoice {
@@ -382,10 +390,28 @@ export default function InvoiceDetailPage() {
                       <span className="font-bold text-green-600">{formatCurrency(payment.amount)}</span>
                     </div>
                     <p className="text-sm text-gray-500">
-                      {payment.paymentMethod} • {new Date(payment.receivedAt).toLocaleDateString()}
+                      {payment.paymentMethod === 'BENEFIT_PAY' ? 'Benefit Pay' : payment.paymentMethod.replace('_', ' ')} • {new Date(payment.receivedAt).toLocaleDateString()}
                     </p>
                     {payment.reference && (
                       <p className="text-sm text-gray-500">Ref: {payment.reference}</p>
+                    )}
+                    {payment.receipt && (
+                      <div className="mt-2 p-2 bg-green-50 rounded-lg flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-sm text-green-700 font-medium">
+                            Receipt: {payment.receipt.receiptNo}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => window.print()}
+                          className="text-xs text-green-600 hover:underline"
+                        >
+                          Print
+                        </button>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -458,6 +484,7 @@ export default function InvoiceDetailPage() {
                   <option value="CASH">Cash</option>
                   <option value="CARD">Card</option>
                   <option value="BANK_TRANSFER">Bank Transfer</option>
+                  <option value="BENEFIT_PAY">Benefit Pay</option>
                   <option value="CHEQUE">Cheque</option>
                   <option value="ONLINE">Online</option>
                 </select>
