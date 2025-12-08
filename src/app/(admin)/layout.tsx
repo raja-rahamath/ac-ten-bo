@@ -159,10 +159,12 @@ export default function AdminLayout({
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [hasCheckedAutoExpand, setHasCheckedAutoExpand] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
   const colorThemeRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -190,6 +192,42 @@ export default function AdminLayout({
       router.push('/login');
     }
   }, [isLoading, isAuthenticated, router]);
+
+  // Auto-expand all menu groups if content fits without scrolling
+  useEffect(() => {
+    // Only check once when menu items are loaded and user is authenticated
+    if (hasCheckedAutoExpand || !menuItems || menuItems.length === 0 || !isSidebarOpen || !isAuthenticated) return;
+
+    // Wait for the nav element to be rendered
+    const checkAutoExpand = () => {
+      if (!navRef.current) return;
+
+      // Count groups with children
+      const groupCount = menuItems.filter((item: any) => item.children).length;
+      const totalItemCount = menuItems.reduce((acc: number, item: any) => {
+        if (item.children) {
+          return acc + 1 + item.children.length; // Parent + children
+        }
+        return acc + 1; // Single item
+      }, 0);
+
+      // Estimate height: ~44px per item (including padding/margin)
+      const estimatedExpandedHeight = totalItemCount * 44;
+      const availableHeight = navRef.current.clientHeight;
+
+      // If expanded content would fit without scrolling, auto-expand
+      if (estimatedExpandedHeight <= availableHeight && groupCount > 0) {
+        const allGroupIds = menuItems.filter((item: any) => item.children).map((item: any) => item.id);
+        setExpandedGroups(allGroupIds);
+      }
+
+      setHasCheckedAutoExpand(true);
+    };
+
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(checkAutoExpand, 100);
+    return () => clearTimeout(timeoutId);
+  }, [menuItems, hasCheckedAutoExpand, isSidebarOpen, isAuthenticated]);
 
   function handleLogout() {
     logout();
@@ -448,7 +486,16 @@ export default function AdminLayout({
         { href: '/amc', label: 'AMC Contracts', labelAr: 'عقود الصيانة السنوية', icon: Icons.amc },
       ],
     },
-    { href: '/customers', label: 'Customers', labelAr: 'العملاء', icon: Icons.customers },
+    {
+      id: 'customers',
+      label: 'Customers',
+      labelAr: 'العملاء',
+      icon: Icons.customers,
+      children: [
+        { href: '/customers', label: 'Customers List', labelAr: 'قائمة العملاء', icon: Icons.customers },
+        { href: '/customer-properties', label: 'Customer Properties', labelAr: 'عقارات العملاء', icon: Icons.properties },
+      ],
+    },
     {
       id: 'property',
       label: 'Property',
@@ -570,6 +617,7 @@ export default function AdminLayout({
   // Apply permission filter to navGroups
   const permittedNavGroups = filterByPermissions(navGroups);
 
+
   // Toggle group expansion
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev =>
@@ -633,6 +681,7 @@ export default function AdminLayout({
     { href: '/dashboard', label: 'Dashboard', icon: Icons.dashboard },
     { href: '/requests', label: 'Service Requests', icon: Icons.requests },
     { href: '/customers', label: 'Customers', icon: Icons.customers },
+    { href: '/customer-properties', label: 'Customer Properties', icon: Icons.properties },
     { href: '/properties', label: 'Properties', icon: Icons.properties },
     { href: '/amc', label: 'AMC Contracts', icon: Icons.amc },
     { href: '/employees', label: 'Employees', icon: Icons.employees },
@@ -760,7 +809,7 @@ export default function AdminLayout({
           )}
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto py-4 px-3">
+          <nav ref={navRef} className="flex-1 overflow-y-auto py-4 px-3">
             <ul className="space-y-1">
               {filteredNavGroups.map((item: any) => (
                 <li key={item.href || item.id}>

@@ -804,7 +804,7 @@ export default function PropertiesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
-                    Zone / Area
+                    Area
                   </label>
                   <select
                     value={buildingForm.zoneId}
@@ -813,7 +813,7 @@ export default function PropertiesPage() {
                     }
                     className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none"
                   >
-                    <option value="">Select Zone</option>
+                    <option value="">Select Area</option>
                     {zones.map((zone) => (
                       <option key={zone.id} value={zone.id}>
                         {zone.name}

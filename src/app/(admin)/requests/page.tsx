@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface ServiceRequest {
@@ -63,13 +62,39 @@ export default function RequestsPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [complaintTypes, setComplaintTypes] = useState<ComplaintType[]>([]);
 
-  useEffect(() => {
-    fetchDropdownData();
-  }, []);
+  // Current employee ID for technician filtering
+  const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchRequests();
-  }, [page, statusFilter, priorityFilter, customerFilter, assignedToFilter, complaintTypeFilter, dateFromFilter, dateToFilter, searchQuery, isTechnician, userZones]);
+    fetchDropdownData();
+    if (isTechnician) {
+      fetchCurrentEmployee();
+    }
+  }, [isTechnician]);
+
+  useEffect(() => {
+    // Only fetch requests when we have the employee ID (for technicians) or immediately (for non-technicians)
+    if (!isTechnician || currentEmployeeId !== null) {
+      fetchRequests();
+    }
+  }, [page, statusFilter, priorityFilter, customerFilter, assignedToFilter, complaintTypeFilter, dateFromFilter, dateToFilter, searchQuery, isTechnician, userZones, currentEmployeeId]);
+
+  async function fetchCurrentEmployee() {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:4001/api/v1/employees/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.success && data.data) {
+        setCurrentEmployeeId(data.data.id);
+      }
+    } catch (error) {
+      console.error('Failed to fetch current employee:', error);
+      // If we can't get the employee ID, don't block - just show all (filtered by zone)
+      setCurrentEmployeeId('');
+    }
+  }
 
   async function fetchDropdownData() {
     try {
@@ -111,10 +136,9 @@ export default function RequestsPage() {
       if (dateToFilter) params.append('dateTo', dateToFilter);
       if (searchQuery) params.append('search', searchQuery);
 
-      // For technicians, filter by their assigned zones
-      if (isTechnician && userZones.length > 0) {
-        const zoneIds = userZones.map((z) => z.zoneId).join(',');
-        params.append('zoneIds', zoneIds);
+      // For technicians, filter by their assigned employee ID (only show requests assigned to them)
+      if (isTechnician && currentEmployeeId) {
+        params.append('assignedEmployeeId', currentEmployeeId);
       }
 
       const response = await fetch(
@@ -154,7 +178,7 @@ export default function RequestsPage() {
       ASSIGNED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
       IN_PROGRESS: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
       COMPLETED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-      CANCELLED: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+      CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     };
     return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
   }
@@ -164,7 +188,7 @@ export default function RequestsPage() {
       LOW: 'text-gray-600 dark:text-gray-400',
       MEDIUM: 'text-yellow-600 dark:text-yellow-400',
       HIGH: 'text-orange-600 dark:text-orange-400',
-      URGENT: 'text-red-600 dark:text-red-400',
+      EMERGENCY: 'text-red-600 dark:text-red-400',
     };
     return colors[priority] || 'text-gray-600 dark:text-gray-400';
   }
@@ -185,9 +209,23 @@ export default function RequestsPage() {
     <div>
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Service Requests</h1>
-        <Button asChild>
-          <Link href="/requests/new">+ New Request</Link>
-        </Button>
+        <div className="flex gap-3">
+          <Link
+            href="/requests/wizard"
+            className="rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-600 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            + New Request (Wizard)
+          </Link>
+          <Link
+            href="/requests/new"
+            className="rounded-xl border border-dark-200 dark:border-dark-600 px-4 py-2.5 text-sm font-medium text-dark-700 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors"
+          >
+            Quick Add
+          </Link>
+        </div>
       </div>
 
       {/* Search and Filter Toggle */}
@@ -252,7 +290,7 @@ export default function RequestsPage() {
                 <option value="LOW">Low</option>
                 <option value="MEDIUM">Medium</option>
                 <option value="HIGH">High</option>
-                <option value="URGENT">Urgent</option>
+                <option value="EMERGENCY">Emergency</option>
               </select>
             </div>
 

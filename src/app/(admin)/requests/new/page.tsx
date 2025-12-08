@@ -603,7 +603,7 @@ export default function NewRequestPage() {
                 { value: 'LOW', label: 'Low', desc: 'Can wait a few days', color: 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' },
                 { value: 'MEDIUM', label: 'Medium', desc: '24-48 hours', color: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800' },
                 { value: 'HIGH', label: 'High', desc: 'Same day', color: 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800' },
-                { value: 'URGENT', label: 'Urgent', desc: 'Emergency', color: 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' },
+                { value: 'EMERGENCY', label: 'Emergency', desc: 'Immediate attention', color: 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' },
               ].map((option) => (
                 <label
                   key={option.value}
@@ -741,14 +741,27 @@ export default function NewRequestPage() {
       {showNewPropertyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-md mx-4">
-            <div className="px-6 py-4 border-b border-dark-100 dark:border-dark-700">
+          <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white dark:bg-dark-800 px-6 py-4 border-b border-dark-100 dark:border-dark-700">
               <h3 className="text-lg font-semibold text-dark-800 dark:text-white">Add New Property</h3>
-              <p className="text-sm text-dark-500 dark:text-dark-400 mt-1">Quick add a building or unit</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400 mt-1">Enter the property address details</p>
             </div>
 
             <form onSubmit={handleCreateProperty} className="p-6 space-y-4">
+              {/* Row 1: Flat & Building */}
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
+                    Flat Number <span className="text-dark-400">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newProperty.flatNumber}
+                    onChange={(e) => setNewProperty({ ...newProperty, flatNumber: e.target.value })}
+                    placeholder="e.g., 0084"
+                    className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
                     Building Number *
@@ -758,24 +771,13 @@ export default function NewRequestPage() {
                     value={newProperty.buildingNumber}
                     onChange={(e) => setNewProperty({ ...newProperty, buildingNumber: e.target.value })}
                     required
-                    placeholder="e.g., 1458"
-                    className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
-                    Unit/Flat Number
-                  </label>
-                  <input
-                    type="text"
-                    value={newProperty.flatNumber}
-                    onChange={(e) => setNewProperty({ ...newProperty, flatNumber: e.target.value })}
-                    placeholder="e.g., 101 (optional)"
+                    placeholder="e.g., 1844"
                     className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none"
                   />
                 </div>
               </div>
 
+              {/* Row 2: Road & Block */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
@@ -786,7 +788,7 @@ export default function NewRequestPage() {
                     value={newProperty.roadNumber}
                     onChange={(e) => setNewProperty({ ...newProperty, roadNumber: e.target.value })}
                     required
-                    placeholder="e.g., 3435"
+                    placeholder="e.g., 1121"
                     className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none"
                   />
                 </div>
@@ -799,12 +801,13 @@ export default function NewRequestPage() {
                     value={newProperty.blockNumber}
                     onChange={(e) => setNewProperty({ ...newProperty, blockNumber: e.target.value })}
                     required
-                    placeholder="e.g., 334"
+                    placeholder="e.g., 0111"
                     className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white focus:border-primary-500 focus:outline-none"
                   />
                 </div>
               </div>
 
+              {/* Governorate */}
               <div>
                 <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
                   Governorate *
@@ -824,6 +827,7 @@ export default function NewRequestPage() {
                 </select>
               </div>
 
+              {/* Area */}
               <div>
                 <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
                   Area *
@@ -845,6 +849,22 @@ export default function NewRequestPage() {
                   ))}
                 </select>
               </div>
+
+              {/* Address Preview */}
+              {(newProperty.buildingNumber || newProperty.flatNumber) && (
+                <div className="p-3 bg-dark-50 dark:bg-dark-900 rounded-lg">
+                  <p className="text-xs text-dark-500 dark:text-dark-400 mb-1">Address Preview:</p>
+                  <p className="text-sm font-medium text-dark-800 dark:text-white">
+                    {[
+                      newProperty.flatNumber && `Flat ${newProperty.flatNumber}`,
+                      newProperty.buildingNumber && `Building ${newProperty.buildingNumber}`,
+                      newProperty.roadNumber && `Road ${newProperty.roadNumber}`,
+                      newProperty.blockNumber && `Block ${newProperty.blockNumber}`,
+                      areas.find(a => a.id === newProperty.areaId)?.name,
+                    ].filter(Boolean).join(', ')}
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-4">
                 <button

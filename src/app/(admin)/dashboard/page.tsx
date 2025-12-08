@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Modern SVG Icons
 const Icons = {
@@ -86,6 +87,7 @@ const WIDGET_KEY_MAP: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const { isTechnician } = useAuth();
   const [stats, setStats] = useState<Stats>({
     totalRequests: 0,
     newRequests: 0,
@@ -99,11 +101,39 @@ export default function DashboardPage() {
   const [recentRequests, setRecentRequests] = useState<RecentRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [allowedWidgets, setAllowedWidgets] = useState<string[]>([]);
+  const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchDashboardData();
     fetchAllowedWidgets();
-  }, []);
+    if (isTechnician) {
+      fetchCurrentEmployee();
+    } else {
+      fetchDashboardData();
+    }
+  }, [isTechnician]);
+
+  // Fetch data again after getting employee ID for technicians
+  useEffect(() => {
+    if (isTechnician && currentEmployeeId) {
+      fetchDashboardData();
+    }
+  }, [currentEmployeeId, isTechnician]);
+
+  async function fetchCurrentEmployee() {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:4001/api/v1/employees/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.success && data.data) {
+        setCurrentEmployeeId(data.data.id);
+      }
+    } catch (error) {
+      console.error('Failed to fetch current employee:', error);
+      setIsLoading(false);
+    }
+  }
 
   async function fetchAllowedWidgets() {
     try {
@@ -125,46 +155,73 @@ export default function DashboardPage() {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [requestsRes, customersRes, employeesRes, invoicesRes] = await Promise.all([
-        fetch('http://localhost:4001/api/v1/service-requests?limit=10', { headers }),
-        fetch('http://localhost:4001/api/v1/customers?limit=1', { headers }),
-        fetch('http://localhost:4001/api/v1/employees?limit=1', { headers }),
-        fetch('http://localhost:4001/api/v1/invoices?limit=1', { headers }),
-      ]);
+      // For technicians, only fetch their assigned requests
+      const requestsUrl = isTechnician && currentEmployeeId
+        ? `http://localhost:4001/api/v1/service-requests?limit=100&assignedEmployeeId=${currentEmployeeId}`
+        : 'http://localhost:4001/api/v1/service-requests?limit=10';
 
-      const [requestsData, customersData, employeesData, invoicesData] = await Promise.all([
-        requestsRes.json(),
-        customersRes.json(),
-        employeesRes.json(),
-        invoicesRes.json(),
-      ]);
+      // Technicians don't need customers, employees, or invoices data
+      if (isTechnician) {
+        const requestsRes = await fetch(requestsUrl, { headers });
+        const requestsData = await requestsRes.json();
 
-      if (requestsData.success) {
-        setRecentRequests(requestsData.data);
-        const requests = requestsData.data;
-        setStats((prev) => ({
-          ...prev,
-          totalRequests: requestsData.pagination?.total || requests.length,
-          newRequests: requests.filter((r: any) => r.status === 'NEW').length,
-          inProgressRequests: requests.filter((r: any) => !['NEW', 'COMPLETED', 'CANCELLED'].includes(r.status)).length,
-          completedRequests: requests.filter((r: any) => r.status === 'COMPLETED').length,
-        }));
-      }
+        if (requestsData.success) {
+          setRecentRequests(requestsData.data.slice(0, 10)); // Show only first 10 in recent
+          const requests = requestsData.data;
+          setStats({
+            totalRequests: requestsData.pagination?.total || requests.length,
+            newRequests: requests.filter((r: any) => r.status === 'NEW').length,
+            inProgressRequests: requests.filter((r: any) => !['NEW', 'COMPLETED', 'CANCELLED'].includes(r.status)).length,
+            completedRequests: requests.filter((r: any) => r.status === 'COMPLETED').length,
+            totalCustomers: 0,
+            totalEmployees: 0,
+            pendingInvoices: 0,
+            revenue: 0,
+          });
+        }
+      } else {
+        // Full dashboard for non-technicians
+        const [requestsRes, customersRes, employeesRes, invoicesRes] = await Promise.all([
+          fetch(requestsUrl, { headers }),
+          fetch('http://localhost:4001/api/v1/customers?limit=1', { headers }),
+          fetch('http://localhost:4001/api/v1/employees?limit=1', { headers }),
+          fetch('http://localhost:4001/api/v1/invoices?limit=1', { headers }),
+        ]);
 
-      if (customersData.success) {
-        setStats((prev) => ({ ...prev, totalCustomers: customersData.pagination?.total || 0 }));
-      }
+        const [requestsData, customersData, employeesData, invoicesData] = await Promise.all([
+          requestsRes.json(),
+          customersRes.json(),
+          employeesRes.json(),
+          invoicesRes.json(),
+        ]);
 
-      if (employeesData.success) {
-        setStats((prev) => ({ ...prev, totalEmployees: employeesData.pagination?.total || 0 }));
-      }
+        if (requestsData.success) {
+          setRecentRequests(requestsData.data);
+          const requests = requestsData.data;
+          setStats((prev) => ({
+            ...prev,
+            totalRequests: requestsData.pagination?.total || requests.length,
+            newRequests: requests.filter((r: any) => r.status === 'NEW').length,
+            inProgressRequests: requests.filter((r: any) => !['NEW', 'COMPLETED', 'CANCELLED'].includes(r.status)).length,
+            completedRequests: requests.filter((r: any) => r.status === 'COMPLETED').length,
+          }));
+        }
 
-      if (invoicesData.success) {
-        const pending = invoicesData.data.filter((i: any) => i.status === 'PENDING').length;
-        const revenue = invoicesData.data
-          .filter((i: any) => i.status === 'PAID')
-          .reduce((sum: number, i: any) => sum + (i.totalAmount || 0), 0);
-        setStats((prev) => ({ ...prev, pendingInvoices: pending, revenue }));
+        if (customersData.success) {
+          setStats((prev) => ({ ...prev, totalCustomers: customersData.pagination?.total || 0 }));
+        }
+
+        if (employeesData.success) {
+          setStats((prev) => ({ ...prev, totalEmployees: employeesData.pagination?.total || 0 }));
+        }
+
+        if (invoicesData.success) {
+          const pending = invoicesData.data.filter((i: any) => i.status === 'PENDING').length;
+          const revenue = invoicesData.data
+            .filter((i: any) => i.status === 'PAID')
+            .reduce((sum: number, i: any) => sum + (i.totalAmount || 0), 0);
+          setStats((prev) => ({ ...prev, pendingInvoices: pending, revenue }));
+        }
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -205,6 +262,14 @@ export default function DashboardPage() {
     );
   }
 
+  // For technicians, show only their request status counts with different titles
+  const technicianStatCards = [
+    { key: 'total_requests', title: 'My Total Requests', value: stats.totalRequests, icon: Icons.clipboard, gradient: 'stat-blue', trend: null },
+    { key: 'new_requests', title: 'Assigned to Me (New)', value: stats.newRequests, icon: Icons.sparkles, gradient: 'stat-indigo', trend: null },
+    { key: 'in_progress_requests', title: 'In Progress', value: stats.inProgressRequests, icon: Icons.clock, gradient: 'stat-orange', trend: null },
+    { key: 'completed_requests', title: 'Completed by Me', value: stats.completedRequests, icon: Icons.check, gradient: 'stat-green', trend: null },
+  ];
+
   const allStatCards = [
     { key: 'total_requests', title: 'Total Requests', value: stats.totalRequests, icon: Icons.clipboard, gradient: 'stat-blue', trend: '+12%' },
     { key: 'new_requests', title: 'New Requests', value: stats.newRequests, icon: Icons.sparkles, gradient: 'stat-indigo', trend: '+5' },
@@ -216,10 +281,13 @@ export default function DashboardPage() {
     { key: 'revenue', title: 'Revenue', value: `$${stats.revenue.toLocaleString()}`, icon: Icons.currency, gradient: 'stat-green', trend: '+18%' },
   ];
 
-  // Filter stat cards based on allowed widgets (empty array = show all for backward compatibility)
-  const statCards = allowedWidgets.length > 0
-    ? allStatCards.filter(card => allowedWidgets.includes(card.key))
-    : allStatCards;
+  // For technicians, show their request stats only
+  // For others, filter based on allowed widgets (empty array = show all for backward compatibility)
+  const statCards = isTechnician
+    ? technicianStatCards
+    : allowedWidgets.length > 0
+      ? allStatCards.filter(card => allowedWidgets.includes(card.key))
+      : allStatCards;
 
   // Check if recent requests table should be shown
   const showRecentRequests = allowedWidgets.length === 0 || allowedWidgets.includes('recent_requests');
@@ -230,7 +298,11 @@ export default function DashboardPage() {
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-500 via-primary-600 to-accent-purple p-6 text-white shadow-glow">
         <div className="relative z-10">
           <h1 className="text-2xl font-bold">Welcome back!</h1>
-          <p className="mt-1 text-primary-100">Here's what's happening with your business today.</p>
+          <p className="mt-1 text-primary-100">
+            {isTechnician
+              ? "Here's an overview of your assigned service requests."
+              : "Here's what's happening with your business today."}
+          </p>
         </div>
         <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
         <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
@@ -268,8 +340,12 @@ export default function DashboardPage() {
       <div className="card-modern overflow-hidden dark:bg-dark-800 dark:border-dark-700">
         <div className="flex items-center justify-between border-b border-dark-100 dark:border-dark-700 px-6 py-4">
           <div>
-            <h2 className="text-lg font-semibold text-dark-800 dark:text-white">Recent Service Requests</h2>
-            <p className="text-sm text-dark-400 dark:text-dark-500">Latest requests from your customers</p>
+            <h2 className="text-lg font-semibold text-dark-800 dark:text-white">
+              {isTechnician ? 'My Recent Requests' : 'Recent Service Requests'}
+            </h2>
+            <p className="text-sm text-dark-400 dark:text-dark-500">
+              {isTechnician ? 'Your most recent assigned requests' : 'Latest requests from your customers'}
+            </p>
           </div>
           <Link
             href="/requests"
@@ -337,10 +413,14 @@ export default function DashboardPage() {
                       </span>
                     </td>
                     <td className="text-dark-400 dark:text-dark-500">
-                      {new Date(request.createdAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
+                      {new Date(request.createdAt).toLocaleString('en-GB', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
                       })}
                     </td>
                   </tr>
