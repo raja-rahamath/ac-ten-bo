@@ -99,7 +99,7 @@ export default function ReceiptsPage() {
       params.append('page', page.toString());
       params.append('limit', '20');
 
-      const response = await apiClient.get(`/receipts?${params.toString()}`);
+      const response = await apiClient.get<{ data: ReceiptData[]; pagination?: { totalPages: number } }>(`/receipts?${params.toString()}`);
       setReceipts(response.data.data || []);
       setTotalPages(response.data.pagination?.totalPages || 1);
     } catch (error) {
@@ -111,7 +111,7 @@ export default function ReceiptsPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await apiClient.get('/receipts/stats');
+      const response = await apiClient.get<{ data: ReceiptStats }>('/receipts/stats');
       setStats(response.data.data);
     } catch (error) {
       console.error('Error fetching stats:', error);

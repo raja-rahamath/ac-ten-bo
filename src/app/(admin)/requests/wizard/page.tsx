@@ -281,8 +281,10 @@ export default function NewRequestWizardPage() {
         // Reset form and close modal
         setShowAddCustomer(false);
         setNewCustomerForm({
+          customerType: 'INDIVIDUAL',
           firstName: '',
           lastName: '',
+          orgName: '',
           countryCode: '+973',
           phoneNumber: '',
           email: '',

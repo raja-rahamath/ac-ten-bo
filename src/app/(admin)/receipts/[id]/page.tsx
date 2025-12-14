@@ -102,7 +102,7 @@ export default function ReceiptDetailPage() {
   const fetchReceipt = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/receipts/${params.id}`);
+      const response = await apiClient.get<{ data: ReceiptData }>(`/receipts/${params.id}`);
       setReceipt(response.data.data);
     } catch (error) {
       console.error('Error fetching receipt:', error);
