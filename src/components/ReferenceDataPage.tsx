@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '@/lib/api';
-import { Button, ConfirmModal } from '@/components/ui';
+import { Button, ConfirmModal, DualListPicker, DualListItem } from '@/components/ui';
 
 interface Column {
   key: string;
@@ -13,13 +13,15 @@ interface Column {
 interface Field {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'select' | 'multiselect' | 'textarea' | 'checkbox';
+  type: 'text' | 'number' | 'select' | 'multiselect' | 'textarea' | 'checkbox' | 'dualListPicker';
   required?: boolean;
   options?: { value: string; label: string }[];
   optionsEndpoint?: string; // API endpoint to load options from (e.g., '/districts')
   optionLabelKey?: string; // Key for the label in the response (default: 'name')
   optionValueKey?: string; // Key for the value in the response (default: 'id')
+  optionSublabelKey?: string; // Key for sublabel in DualListPicker (e.g., 'governorate.name')
   placeholder?: string;
+  step?: string; // For number inputs (e.g., '0.001' for decimal precision)
   // Cascading dropdown support
   dependsOn?: string; // Field key this dropdown depends on (e.g., 'countryId')
   filterKey?: string; // Key in the data to filter by (e.g., 'countryId')
@@ -27,6 +29,11 @@ interface Field {
   isFilterOnly?: boolean; // If true, this field is only for filtering and not submitted to API
   // Multiselect support
   getValuesFromItem?: (item: any) => string[]; // Function to extract selected values from item for edit mode
+  // DualListPicker support
+  exclusiveAssignment?: boolean; // If true, items can only be assigned to one record (excludes items assigned to other records)
+  assignedToKey?: string; // Key in the data that contains the assigned record IDs (e.g., 'zoneIds')
+  availableTitle?: string; // Title for available items column
+  selectedTitle?: string; // Title for selected items column
 }
 
 interface TableFilter {
@@ -223,7 +230,7 @@ export default function ReferenceDataPage({
     fields.forEach(field => {
       if (field.type === 'checkbox') {
         initialData[field.key] = false;
-      } else if (field.type === 'multiselect') {
+      } else if (field.type === 'multiselect' || field.type === 'dualListPicker') {
         initialData[field.key] = [];
       } else {
         initialData[field.key] = '';
@@ -235,6 +242,7 @@ export default function ReferenceDataPage({
   };
 
   const handleEdit = (item: any) => {
+    console.log('handleEdit called with item:', item);
     setEditingItem(item);
     const editData: Record<string, any> = {};
     fields.forEach(field => {
@@ -246,10 +254,11 @@ export default function ReferenceDataPage({
           value = value?.[k];
         }
         editData[field.key] = value || '';
-      } else if (field.type === 'multiselect') {
+      } else if (field.type === 'multiselect' || field.type === 'dualListPicker') {
         // Use custom function to extract values if provided
         if (field.getValuesFromItem) {
           editData[field.key] = field.getValuesFromItem(item);
+          console.log(`Extracted ${field.key} values:`, editData[field.key], 'from item.areas:', item.areas);
         } else {
           editData[field.key] = item[field.key] ?? [];
         }
@@ -423,7 +432,6 @@ export default function ReferenceDataPage({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-dark-800 dark:text-white">{title}</h1>
-          {titleAr && <p className="text-dark-500 dark:text-dark-400 text-sm">{titleAr}</p>}
         </div>
         <Button onClick={handleAdd}>
           + New {itemName}
@@ -577,7 +585,9 @@ export default function ReferenceDataPage({
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto">
+          <div className={`relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto ${
+            fields.some(f => f.type === 'dualListPicker') ? 'max-w-3xl' : 'max-w-md'
+          }`}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-dark-800 dark:text-white">
                 {editingItem ? 'Edit' : 'Add'} {itemName}
@@ -606,12 +616,60 @@ export default function ReferenceDataPage({
                   ? (field.optionsEndpoint ? getFilteredOptions(field) : field.options || [])
                   : [];
 
+                // Get DualListPicker items
+                const getDualListItems = (): DualListItem[] => {
+                  if (field.type !== 'dualListPicker') return [];
+                  const data = dynamicOptionsData[field.key] || [];
+                  const labelKey = field.optionLabelKey || 'name';
+                  const valueKey = field.optionValueKey || 'id';
+                  const sublabelKey = field.optionSublabelKey;
+                  const assignedToKey = field.assignedToKey || 'zoneIds';
+                  const currentId = editingItem?.id;
+
+                  return data
+                    .filter((item: any) => {
+                      // If exclusive assignment, filter out items assigned to OTHER records
+                      if (field.exclusiveAssignment) {
+                        const assignedIds = item[assignedToKey] || [];
+                        // Include if not assigned to anyone, or assigned to current record
+                        return assignedIds.length === 0 || (currentId && assignedIds.includes(currentId));
+                      }
+                      return true;
+                    })
+                    .map((item: any) => {
+                      // Get sublabel from nested path (e.g., 'governorate.name')
+                      let sublabel: string | undefined;
+                      if (sublabelKey) {
+                        const keys = sublabelKey.split('.');
+                        let value = item;
+                        for (const k of keys) {
+                          value = value?.[k];
+                        }
+                        sublabel = value as string;
+                      }
+                      return {
+                        value: item[valueKey],
+                        label: item[labelKey],
+                        sublabel,
+                      };
+                    });
+                };
+
                 return (
                   <div key={field.key}>
                     <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
                       {field.label} {field.required && !field.isFilterOnly && <span className="text-red-500">*</span>}
                     </label>
-                    {field.type === 'multiselect' ? (
+                    {field.type === 'dualListPicker' ? (
+                      <DualListPicker
+                        availableItems={getDualListItems()}
+                        selectedValues={formData[field.key] || []}
+                        onChange={(values) => handleFieldChange(field.key, values)}
+                        availableTitle={field.availableTitle || 'Available'}
+                        selectedTitle={field.selectedTitle || 'Selected'}
+                        height="250px"
+                      />
+                    ) : field.type === 'multiselect' ? (
                       <div className="border border-dark-200 dark:border-dark-600 rounded-xl p-3 max-h-48 overflow-y-auto bg-white dark:bg-dark-700">
                         {options.length === 0 ? (
                           <p className="text-sm text-dark-400">No options available</p>
@@ -677,11 +735,12 @@ export default function ReferenceDataPage({
                     ) : (
                       <input
                         type={field.type}
-                        value={formData[field.key] || ''}
-                        onChange={(e) => handleFieldChange(field.key, field.type === 'number' ? Number(e.target.value) : e.target.value)}
+                        value={formData[field.key] ?? ''}
+                        onChange={(e) => handleFieldChange(field.key, field.type === 'number' ? (e.target.value === '' ? null : parseFloat(e.target.value)) : e.target.value)}
                         className="input-modern dark:bg-dark-700 dark:border-dark-600"
                         placeholder={field.placeholder}
                         required={field.required}
+                        step={field.step}
                       />
                     )}
                   </div>

@@ -1376,7 +1376,7 @@ export default function RequestDetailPage() {
           <div className="rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Invoices</h2>
-              {request.status === 'COMPLETED' && invoices.length === 0 && (
+              {request.status === 'COMPLETED' && !invoices.some(inv => inv.status !== 'CANCELLED') && (
                 <button
                   onClick={generateInvoice}
                   disabled={generatingInvoice}
@@ -1620,17 +1620,17 @@ export default function RequestDetailPage() {
       {/* Assign Employee Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-bold">Assign Employee</h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Assign Employee</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {request.zone ? `Zone: ${request.zone.name}` : 'Select an employee to assign'}
                 </p>
               </div>
               <button
                 onClick={() => setShowAssignModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1639,7 +1639,7 @@ export default function RequestDetailPage() {
             </div>
 
             {assignError && (
-              <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
                 {assignError}
               </div>
             )}
@@ -1651,24 +1651,24 @@ export default function RequestDetailPage() {
                 placeholder="Search by name, email, or job title..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             </div>
 
             <div className="flex-1 overflow-y-auto">
               {loadingEmployees ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="text-gray-500">Loading employees...</div>
+                  <div className="text-gray-500 dark:text-gray-400">Loading employees...</div>
                 </div>
               ) : employees.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
                   <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                   <p>No employees available</p>
                 </div>
               ) : filteredEmployees.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
                   <p>No employees match your search</p>
                 </div>
               ) : (
@@ -1678,8 +1678,8 @@ export default function RequestDetailPage() {
                       key={emp.id}
                       className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors ${
                         selectedEmployeeId === emp.id
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       <input
@@ -1691,12 +1691,12 @@ export default function RequestDetailPage() {
                         className="w-4 h-4 text-primary-600 focus:ring-primary-500"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {emp.firstName} {emp.lastName}
                         </p>
-                        <p className="text-sm text-gray-500">{emp.email}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{emp.email}</p>
                         {emp.jobTitle && (
-                          <p className="text-xs text-gray-400">{emp.jobTitle.name}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">{emp.jobTitle.name}</p>
                         )}
                         {emp.zoneAssignments && emp.zoneAssignments.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
@@ -1722,7 +1722,7 @@ export default function RequestDetailPage() {
               )}
             </div>
 
-            <div className="flex gap-3 mt-4 pt-4 border-t">
+            <div className="flex gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <Button
                 variant="outline"
                 className="flex-1"

@@ -7,8 +7,10 @@ import { api } from '@/lib/api';
 
 interface Customer {
   id: string;
-  firstName: string;
-  lastName: string;
+  customerType?: 'INDIVIDUAL' | 'ORGANIZATION';
+  firstName?: string;
+  lastName?: string;
+  orgName?: string;
   phone?: string;
   email?: string;
   customerNo: string;
@@ -72,8 +74,10 @@ export default function NewRequestWizardPage() {
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
   const [newCustomerForm, setNewCustomerForm] = useState({
+    customerType: 'INDIVIDUAL' as 'INDIVIDUAL' | 'ORGANIZATION',
     firstName: '',
     lastName: '',
+    orgName: '',
     countryCode: '+973',
     phoneNumber: '',
     email: '',
@@ -231,10 +235,19 @@ export default function NewRequestWizardPage() {
   }
 
   async function handleCreateCustomer() {
-    if (!newCustomerForm.firstName.trim() || !newCustomerForm.lastName.trim()) {
-      setError('First name and last name are required');
-      return;
+    // Validate based on customer type
+    if (newCustomerForm.customerType === 'INDIVIDUAL') {
+      if (!newCustomerForm.firstName.trim() || !newCustomerForm.lastName.trim()) {
+        setError('First name and last name are required');
+        return;
+      }
+    } else {
+      if (!newCustomerForm.orgName.trim()) {
+        setError('Company name is required');
+        return;
+      }
     }
+
     if (!newCustomerForm.phoneNumber.trim()) {
       setError('Phone number is required');
       return;
@@ -245,12 +258,17 @@ export default function NewRequestWizardPage() {
 
     try {
       const payload: any = {
-        customerType: 'INDIVIDUAL',
-        firstName: newCustomerForm.firstName.trim(),
-        lastName: newCustomerForm.lastName.trim(),
+        customerType: newCustomerForm.customerType,
         phone: `${newCustomerForm.countryCode}${newCustomerForm.phoneNumber}`,
         isActive: true,
       };
+
+      if (newCustomerForm.customerType === 'INDIVIDUAL') {
+        payload.firstName = newCustomerForm.firstName.trim();
+        payload.lastName = newCustomerForm.lastName.trim();
+      } else {
+        payload.orgName = newCustomerForm.orgName.trim();
+      }
 
       if (newCustomerForm.email.trim()) {
         payload.email = newCustomerForm.email.trim();
@@ -1040,7 +1058,7 @@ export default function NewRequestWizardPage() {
       {/* Add New Customer Modal */}
       {showAddCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAddCustomer(false)} />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl w-full max-w-md mx-4">
             <div className="px-6 py-4 border-b border-dark-100 dark:border-dark-700">
               <h3 className="text-lg font-semibold text-dark-800 dark:text-white">
@@ -1052,38 +1070,87 @@ export default function NewRequestWizardPage() {
             </div>
 
             <div className="p-6 space-y-4">
-              {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Customer Type Toggle */}
+              <div>
+                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                  Customer Type
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewCustomerForm({ ...newCustomerForm, customerType: 'INDIVIDUAL' })}
+                    className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                      newCustomerForm.customerType === 'INDIVIDUAL'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                        : 'border-dark-200 dark:border-dark-600 text-dark-600 dark:text-dark-400 hover:bg-dark-50 dark:hover:bg-dark-700'
+                    }`}
+                  >
+                    Individual
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewCustomerForm({ ...newCustomerForm, customerType: 'ORGANIZATION' })}
+                    className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                      newCustomerForm.customerType === 'ORGANIZATION'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                        : 'border-dark-200 dark:border-dark-600 text-dark-600 dark:text-dark-400 hover:bg-dark-50 dark:hover:bg-dark-700'
+                    }`}
+                  >
+                    Company
+                  </button>
+                </div>
+              </div>
+
+              {/* Name Fields - Show based on customer type */}
+              {newCustomerForm.customerType === 'INDIVIDUAL' ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newCustomerForm.firstName}
+                      onChange={(e) =>
+                        setNewCustomerForm({ ...newCustomerForm, firstName: e.target.value })
+                      }
+                      placeholder="John"
+                      className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white placeholder-dark-400 focus:border-primary-500 focus:outline-none"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newCustomerForm.lastName}
+                      onChange={(e) =>
+                        setNewCustomerForm({ ...newCustomerForm, lastName: e.target.value })
+                      }
+                      placeholder="Doe"
+                      className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white placeholder-dark-400 focus:border-primary-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              ) : (
                 <div>
                   <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
-                    First Name *
+                    Company Name *
                   </label>
                   <input
                     type="text"
-                    value={newCustomerForm.firstName}
+                    value={newCustomerForm.orgName}
                     onChange={(e) =>
-                      setNewCustomerForm({ ...newCustomerForm, firstName: e.target.value })
+                      setNewCustomerForm({ ...newCustomerForm, orgName: e.target.value })
                     }
-                    placeholder="John"
+                    placeholder="ABC Company W.L.L."
                     className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white placeholder-dark-400 focus:border-primary-500 focus:outline-none"
                     autoFocus
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1">
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={newCustomerForm.lastName}
-                    onChange={(e) =>
-                      setNewCustomerForm({ ...newCustomerForm, lastName: e.target.value })
-                    }
-                    placeholder="Doe"
-                    className="w-full rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-700 px-4 py-2.5 text-dark-800 dark:text-white placeholder-dark-400 focus:border-primary-500 focus:outline-none"
-                  />
-                </div>
-              </div>
+              )}
 
               {/* Phone Field */}
               <div>
@@ -1146,8 +1213,10 @@ export default function NewRequestWizardPage() {
                   onClick={() => {
                     setShowAddCustomer(false);
                     setNewCustomerForm({
+                      customerType: 'INDIVIDUAL',
                       firstName: '',
                       lastName: '',
+                      orgName: '',
                       countryCode: '+973',
                       phoneNumber: '',
                       email: '',
@@ -1160,7 +1229,13 @@ export default function NewRequestWizardPage() {
                 <button
                   type="button"
                   onClick={handleCreateCustomer}
-                  disabled={isCreatingCustomer || !newCustomerForm.firstName || !newCustomerForm.lastName || !newCustomerForm.phoneNumber}
+                  disabled={
+                    isCreatingCustomer ||
+                    !newCustomerForm.phoneNumber ||
+                    (newCustomerForm.customerType === 'INDIVIDUAL'
+                      ? !newCustomerForm.firstName || !newCustomerForm.lastName
+                      : !newCustomerForm.orgName)
+                  }
                   className="flex-1 px-4 py-2.5 rounded-xl bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50"
                 >
                   {isCreatingCustomer ? 'Creating...' : 'Create & Select'}

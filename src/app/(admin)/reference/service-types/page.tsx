@@ -2,17 +2,22 @@
 
 import ReferenceDataPage from '@/components/ReferenceDataPage';
 
-export default function ComplaintTypesPage() {
+export default function ServiceTypesPage() {
   return (
     <ReferenceDataPage
-      title="Complaint Types"
-      titleAr="أنواع الشكاوى"
+      title="Service Types"
+      titleAr="أنواع الخدمات"
       endpoint="/complaint-types"
       columns={[
         { key: 'code', label: 'Code' },
         { key: 'name', label: 'Name' },
         { key: 'nameAr', label: 'Name (Arabic)' },
         { key: 'description', label: 'Description' },
+        {
+          key: 'defaultServiceCharge',
+          label: 'Service Charge (BHD)',
+          render: (value) => value ? `${parseFloat(value).toFixed(3)} BHD` : '-',
+        },
         {
           key: 'priority',
           label: 'Priority',
@@ -43,10 +48,11 @@ export default function ComplaintTypesPage() {
         },
       ]}
       fields={[
-        { key: 'code', label: 'Code', type: 'text', required: true, placeholder: 'e.g., LEAK' },
-        { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'Complaint type name' },
-        { key: 'nameAr', label: 'Name (Arabic)', type: 'text', placeholder: 'نوع الشكوى' },
-        { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Description' },
+        { key: 'code', label: 'Code', type: 'text', required: true, placeholder: 'e.g., AC_MAINT' },
+        { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'Service type name' },
+        { key: 'nameAr', label: 'Name (Arabic)', type: 'text', placeholder: 'نوع الخدمة' },
+        { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Description of the service' },
+        { key: 'defaultServiceCharge', label: 'Default Service Charge (BHD)', type: 'number', placeholder: '0.000', step: '0.001' },
         {
           key: 'priority',
           label: 'Default Priority',
@@ -58,9 +64,11 @@ export default function ComplaintTypesPage() {
             { value: 'URGENT', label: 'Urgent' },
           ],
         },
-        { key: 'isActive', label: 'Active', type: 'checkbox', placeholder: 'Is this type active?' },
+        { key: 'isActive', label: 'Active', type: 'checkbox', placeholder: 'Is this service type active?' },
       ]}
-      searchPlaceholder="Search complaint types..."
+      searchPlaceholder="Search service types..."
+      hideDelete={true}
+      showToggleActive={true}
     />
   );
 }

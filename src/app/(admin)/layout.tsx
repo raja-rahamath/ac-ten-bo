@@ -569,7 +569,7 @@ export default function AdminLayout({
         { href: '/reference/unit-types', label: 'Unit Types', labelAr: 'أنواع الوحدات', icon: iconMap.unitType },
         { href: '/reference/room-types', label: 'Room Types', labelAr: 'أنواع الغرف', icon: iconMap.roomType },
         { href: '/reference/asset-types', label: 'Asset Types', labelAr: 'أنواع الأصول', icon: iconMap.assetType },
-        { href: '/reference/complaint-types', label: 'Complaint Types', labelAr: 'أنواع الشكاوى', icon: iconMap.complaintType },
+        { href: '/reference/service-types', label: 'Service Types', labelAr: 'أنواع الخدمات', icon: iconMap.complaintType },
         { href: '/reference/labor-rate-types', label: 'Labor Rate Types', labelAr: 'أنواع أسعار العمالة', icon: iconMap.laborRateType },
       ],
     },

@@ -6,11 +6,17 @@ import Link from 'next/link';
 import { Button } from '@/components/ui';
 
 interface InvoiceItem {
-  id: string;
+  id?: string;
   description: string;
   quantity: number;
   unitPrice: number;
   total: number;
+}
+
+interface NewItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
 }
 
 interface Payment {
@@ -64,6 +70,13 @@ export default function InvoiceDetailPage() {
     notes: '',
   });
   const [paymentError, setPaymentError] = useState('');
+
+  // Item management state
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [editingItems, setEditingItems] = useState<InvoiceItem[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [newItem, setNewItem] = useState<NewItem>({ description: '', quantity: 1, unitPrice: 0 });
+  const [itemError, setItemError] = useState('');
 
   useEffect(() => {
     fetchInvoice();
@@ -144,6 +157,91 @@ export default function InvoiceDetailPage() {
     } catch (error) {
       console.error('Failed to record payment:', error);
       setPaymentError('Failed to record payment');
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  // Item management functions
+  function startEditItems() {
+    setEditingItems(invoice?.items || []);
+    setIsEditMode(true);
+  }
+
+  function cancelEditItems() {
+    setEditingItems([]);
+    setIsEditMode(false);
+    setItemError('');
+  }
+
+  function addItemToList() {
+    if (!newItem.description.trim()) {
+      setItemError('Description is required');
+      return;
+    }
+    if (newItem.quantity <= 0) {
+      setItemError('Quantity must be greater than 0');
+      return;
+    }
+    if (newItem.unitPrice <= 0) {
+      setItemError('Unit price must be greater than 0');
+      return;
+    }
+
+    const item: InvoiceItem = {
+      description: newItem.description,
+      quantity: newItem.quantity,
+      unitPrice: newItem.unitPrice,
+      total: newItem.quantity * newItem.unitPrice,
+    };
+
+    setEditingItems([...editingItems, item]);
+    setNewItem({ description: '', quantity: 1, unitPrice: 0 });
+    setShowAddItemModal(false);
+    setItemError('');
+  }
+
+  function removeItem(index: number) {
+    setEditingItems(editingItems.filter((_, i) => i !== index));
+  }
+
+  async function saveItems() {
+    if (editingItems.length === 0) {
+      setItemError('At least one item is required');
+      return;
+    }
+
+    setIsUpdating(true);
+    setItemError('');
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:4001/api/v1/invoices/${params.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          items: editingItems.map(item => ({
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.quantity * item.unitPrice,
+          })),
+        }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setInvoice(data.data);
+        setIsEditMode(false);
+        setEditingItems([]);
+      } else {
+        setItemError(data.error?.message || 'Failed to update items');
+      }
+    } catch (error) {
+      console.error('Failed to save items:', error);
+      setItemError('Failed to save items');
     } finally {
       setIsUpdating(false);
     }
@@ -261,6 +359,48 @@ export default function InvoiceDetailPage() {
 
             {/* Items */}
             <div className="border-t pt-4">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-medium text-gray-700">Line Items</h3>
+                {invoice.status === 'DRAFT' && !isEditMode && (
+                  <button
+                    onClick={startEditItems}
+                    className="text-sm text-primary hover:underline flex items-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    Edit Items
+                  </button>
+                )}
+                {isEditMode && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowAddItemModal(true)}
+                      className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                    >
+                      + Add Item
+                    </button>
+                    <button
+                      onClick={saveItems}
+                      disabled={isUpdating}
+                      className="text-sm bg-primary text-white px-3 py-1 rounded hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {isUpdating ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={cancelEditItems}
+                      className="text-sm text-gray-600 hover:text-gray-800"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {itemError && (
+                <div className="mb-3 rounded-lg bg-red-50 p-3 text-red-600 text-sm">{itemError}</div>
+              )}
+
               <table className="w-full">
                 <thead>
                   <tr className="border-b text-left text-sm text-gray-500">
@@ -268,24 +408,62 @@ export default function InvoiceDetailPage() {
                     <th className="pb-3 font-medium text-right">Qty</th>
                     <th className="pb-3 font-medium text-right">Unit Price</th>
                     <th className="pb-3 font-medium text-right">Amount</th>
+                    {isEditMode && <th className="pb-3 font-medium text-right w-16">Action</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {invoice.items && invoice.items.length > 0 ? (
-                    invoice.items.map((item) => (
-                      <tr key={item.id} className="border-b">
-                        <td className="py-3">{item.description}</td>
-                        <td className="py-3 text-right">{item.quantity}</td>
-                        <td className="py-3 text-right">{formatCurrency(item.unitPrice)}</td>
-                        <td className="py-3 text-right">{formatCurrency(item.total)}</td>
+                  {isEditMode ? (
+                    // Edit mode - show editable items
+                    editingItems.length > 0 ? (
+                      editingItems.map((item, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="py-3">{item.description}</td>
+                          <td className="py-3 text-right">{item.quantity}</td>
+                          <td className="py-3 text-right">{formatCurrency(item.unitPrice)}</td>
+                          <td className="py-3 text-right">{formatCurrency(item.total)}</td>
+                          <td className="py-3 text-right">
+                            <button
+                              onClick={() => removeItem(index)}
+                              className="text-red-500 hover:text-red-700"
+                              title="Remove item"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td className="py-6 text-center text-gray-500" colSpan={5}>
+                          No items. Click "Add Item" to add line items.
+                        </td>
                       </tr>
-                    ))
+                    )
                   ) : (
-                    <tr>
-                      <td className="py-3" colSpan={4}>
-                        <p className="text-gray-500">Service charges</p>
-                      </td>
-                    </tr>
+                    // View mode - show existing items
+                    invoice.items && invoice.items.length > 0 ? (
+                      invoice.items.map((item) => (
+                        <tr key={item.id} className="border-b">
+                          <td className="py-3">{item.description}</td>
+                          <td className="py-3 text-right">{item.quantity}</td>
+                          <td className="py-3 text-right">{formatCurrency(item.unitPrice)}</td>
+                          <td className="py-3 text-right">{formatCurrency(item.total)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td className="py-3" colSpan={4}>
+                          <p className="text-gray-500 text-center">No items added yet</p>
+                          {invoice.status === 'DRAFT' && (
+                            <p className="text-sm text-primary text-center mt-1">
+                              Click "Edit Items" to add line items
+                            </p>
+                          )}
+                        </td>
+                      </tr>
+                    )
                   )}
                 </tbody>
               </table>
@@ -527,6 +705,83 @@ export default function InvoiceDetailPage() {
                 disabled={isUpdating || paymentData.amount <= 0}
               >
                 {isUpdating ? 'Recording...' : 'Record Payment'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Item Modal */}
+      {showAddItemModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+            <h2 className="mb-4 text-xl font-bold">Add Item</h2>
+
+            {itemError && (
+              <div className="mb-4 rounded-lg bg-red-50 p-3 text-red-600">{itemError}</div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block font-medium">Description *</label>
+                <input
+                  type="text"
+                  value={newItem.description}
+                  onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                  placeholder="e.g., AC Filter Replacement, Labor Charge"
+                  className="w-full rounded-lg border p-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-2 block font-medium">Quantity *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newItem.quantity}
+                    onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
+                    className="w-full rounded-lg border p-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block font-medium">Unit Price (BHD) *</label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    value={newItem.unitPrice}
+                    onChange={(e) => setNewItem({ ...newItem, unitPrice: parseFloat(e.target.value) || 0 })}
+                    className="w-full rounded-lg border p-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-gray-50 p-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Total:</span>
+                  <span className="font-bold">{formatCurrency(newItem.quantity * newItem.unitPrice)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setShowAddItemModal(false);
+                  setNewItem({ description: '', quantity: 1, unitPrice: 0 });
+                  setItemError('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={addItemToList}
+              >
+                Add Item
               </Button>
             </div>
           </div>

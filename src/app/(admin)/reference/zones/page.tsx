@@ -18,21 +18,17 @@ export default function ZonesPage() {
           label: 'Areas',
           render: (_value, item) => {
             const areaNames = item.areas?.map((za: any) => za.area?.name).filter(Boolean) || [];
+            // Show all areas with scrolling for view modal context
             return (
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
                 {areaNames.length > 0 ? (
-                  areaNames.slice(0, 3).map((name: string, idx: number) => (
+                  areaNames.map((name: string, idx: number) => (
                     <span key={idx} className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                       {name}
                     </span>
                   ))
                 ) : (
                   <span className="text-dark-400 text-xs">No areas</span>
-                )}
-                {areaNames.length > 3 && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-dark-100 text-dark-600 dark:bg-dark-700 dark:text-dark-300">
-                    +{areaNames.length - 3} more
-                  </span>
                 )}
               </div>
             );
@@ -58,11 +54,15 @@ export default function ZonesPage() {
         {
           key: 'areaIds',
           label: 'Areas',
-          type: 'multiselect',
-          optionsEndpoint: '/areas',
+          type: 'dualListPicker',
+          optionsEndpoint: '/areas?limit=1000',
           optionLabelKey: 'name',
           optionValueKey: 'id',
-          placeholder: 'Select areas for this zone',
+          optionSublabelKey: 'governorate.name',
+          exclusiveAssignment: true,
+          assignedToKey: 'zoneIds',
+          availableTitle: 'Available Areas',
+          selectedTitle: 'Assigned to Zone',
           getValuesFromItem: (item: any) => item.areas?.map((za: any) => za.area?.id).filter(Boolean) || [],
         },
         { key: 'isActive', label: 'Active', type: 'checkbox', placeholder: 'Is this zone active?' },

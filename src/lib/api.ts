@@ -57,7 +57,7 @@ class ApiClient {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
-  async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  async request<T = any>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const { method = 'GET', body, headers = {}, skipAuth = false } = options;
 
     const requestHeaders: Record<string, string> = {
@@ -130,23 +130,23 @@ class ApiClient {
     return response.json();
   }
 
-  get<T>(endpoint: string, options?: Omit<RequestOptions, 'method' | 'body'>) {
+  get<T = any>(endpoint: string, options?: Omit<RequestOptions, 'method' | 'body'>) {
     return this.request<T>(endpoint, { ...options, method: 'GET' });
   }
 
-  post<T>(endpoint: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) {
+  post<T = any>(endpoint: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) {
     return this.request<T>(endpoint, { ...options, method: 'POST', body });
   }
 
-  put<T>(endpoint: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) {
+  put<T = any>(endpoint: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) {
     return this.request<T>(endpoint, { ...options, method: 'PUT', body });
   }
 
-  patch<T>(endpoint: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) {
+  patch<T = any>(endpoint: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) {
     return this.request<T>(endpoint, { ...options, method: 'PATCH', body });
   }
 
-  delete<T>(endpoint: string, options?: Omit<RequestOptions, 'method' | 'body'>) {
+  delete<T = any>(endpoint: string, options?: Omit<RequestOptions, 'method' | 'body'>) {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
 }
