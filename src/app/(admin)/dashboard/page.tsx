@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import OnboardingBanner from '../onboarding/components/OnboardingBanner';
 
 // Modern SVG Icons
 const Icons = {
@@ -294,6 +295,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Onboarding Banner */}
+      <OnboardingBanner />
+
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-500 via-primary-600 to-accent-purple p-6 text-white shadow-glow">
         <div className="relative z-10">
