@@ -34,7 +34,8 @@ export default function LoginPage() {
     const passwordValue = password;
 
     try {
-      const response = await fetch('http://localhost:4001/api/v1/auth/login', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailValue, password: passwordValue }),
@@ -155,7 +156,7 @@ export default function LoginPage() {
                   <label htmlFor="password" className="block text-sm font-medium text-dark-700">
                     Password
                   </label>
-                  <button type="button" className="text-sm text-primary-500 hover:text-primary-600 font-medium">
+                  <button type="button" tabIndex={-1} className="text-sm text-primary-500 hover:text-primary-600 font-medium">
                     Forgot password?
                   </button>
                 </div>
