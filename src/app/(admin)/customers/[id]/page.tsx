@@ -343,9 +343,9 @@ export default function CustomerDetailPage() {
                   Search Property
                 </label>
                 <AsyncSelect
-                  loadOptions={searchProperties}
+                  onSearch={searchProperties}
                   placeholder="Type building number to search..."
-                  onChange={(option) => setSelectedUnitId(option?.value || '')}
+                  onChange={(value) => setSelectedUnitId(value)}
                 />
               </div>
               <div>
