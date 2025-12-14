@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -57,7 +59,7 @@ export default function AssetTypesPage() {
   async function fetchAssetTypes() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/asset-types', {
+      const response = await fetch('${API_URL}/asset-types', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -75,8 +77,8 @@ export default function AssetTypesPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingAssetType
-      ? `http://localhost:4001/api/v1/asset-types/${editingAssetType.id}`
-      : 'http://localhost:4001/api/v1/asset-types';
+      ? `${API_URL}/asset-types/${editingAssetType.id}`
+      : '${API_URL}/asset-types';
 
     try {
       const response = await fetch(url, {

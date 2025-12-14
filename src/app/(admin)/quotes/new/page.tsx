@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -85,7 +87,7 @@ export default function NewQuotePage() {
       setSearchingCustomer(true);
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:4001/api/v1/customers?search=${encodeURIComponent(search)}&limit=10`,
+        `${API_URL}/customers?search=${encodeURIComponent(search)}&limit=10`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.ok) {
@@ -207,7 +209,7 @@ export default function NewQuotePage() {
         })),
       };
 
-      const response = await fetch('http://localhost:4001/api/v1/quotes', {
+      const response = await fetch('${API_URL}/quotes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -75,7 +77,7 @@ export default function CompaniesPage() {
   async function fetchCompanies() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/companies', {
+      const response = await fetch('${API_URL}/companies', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -93,8 +95,8 @@ export default function CompaniesPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingCompany
-      ? `http://localhost:4001/api/v1/companies/${editingCompany.id}`
-      : 'http://localhost:4001/api/v1/companies';
+      ? `${API_URL}/companies/${editingCompany.id}`
+      : '${API_URL}/companies';
 
     try {
       const response = await fetch(url, {
@@ -138,7 +140,7 @@ export default function CompaniesPage() {
   async function setAsPrimary(companyId: string) {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/companies/${companyId}/set-primary`, {
+      const response = await fetch(`${API_URL}/companies/${companyId}/set-primary`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

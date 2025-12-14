@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -191,7 +193,7 @@ export default function NewEstimatePage() {
   const fetchLaborRateTypes = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/labor-rate-types?isActive=true', {
+      const response = await fetch('${API_URL}/labor-rate-types?isActive=true', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -206,7 +208,7 @@ export default function NewEstimatePage() {
   const fetchInventoryItems = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/inventory-items?isActive=true&limit=500', {
+      const response = await fetch('${API_URL}/inventory-items?isActive=true&limit=500', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -221,7 +223,7 @@ export default function NewEstimatePage() {
   const fetchInventoryCategories = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/inventory-categories?isActive=true', {
+      const response = await fetch('${API_URL}/inventory-categories?isActive=true', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -261,7 +263,7 @@ export default function NewEstimatePage() {
     setSavingNewItem(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/inventory-items', {
+      const response = await fetch('${API_URL}/inventory-items', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -315,7 +317,7 @@ export default function NewEstimatePage() {
   const fetchServiceRequestById = async (id: string) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/service-requests/${id}`, {
+      const response = await fetch(`${API_URL}/service-requests/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -339,7 +341,7 @@ export default function NewEstimatePage() {
     try {
       setScopeFromNote(false);
       const response = await fetch(
-        `http://localhost:4001/api/v1/comments?serviceRequestId=${serviceRequestId}&commentType=SCOPE_OF_WORK&sortOrder=desc`,
+        `${API_URL}/comments?serviceRequestId=${serviceRequestId}&commentType=SCOPE_OF_WORK&sortOrder=desc`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.ok) {
@@ -365,7 +367,7 @@ export default function NewEstimatePage() {
       setSearchingServiceRequest(true);
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:4001/api/v1/service-requests?search=${encodeURIComponent(search)}&limit=10&status=PENDING,IN_PROGRESS,SCHEDULED`,
+        `${API_URL}/service-requests?search=${encodeURIComponent(search)}&limit=10&status=PENDING,IN_PROGRESS,SCHEDULED`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.ok) {
@@ -634,7 +636,7 @@ export default function NewEstimatePage() {
         })),
       };
 
-      const response = await fetch('http://localhost:4001/api/v1/estimates', {
+      const response = await fetch('${API_URL}/estimates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

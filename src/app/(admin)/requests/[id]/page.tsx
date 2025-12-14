@@ -1,5 +1,8 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:4001';
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -230,7 +233,7 @@ export default function RequestDetailPage() {
   async function fetchRequest() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/service-requests/${params.id}`, {
+      const response = await fetch(`${API_URL}/service-requests/${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -249,7 +252,7 @@ export default function RequestDetailPage() {
     try {
       setLoadingEstimates(true);
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/estimates?serviceRequestId=${params.id}&latestOnly=true`, {
+      const response = await fetch(`${API_URL}/estimates?serviceRequestId=${params.id}&latestOnly=true`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -268,7 +271,7 @@ export default function RequestDetailPage() {
     try {
       setLoadingInvoices(true);
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/invoices?serviceRequestId=${params.id}`, {
+      const response = await fetch(`${API_URL}/invoices?serviceRequestId=${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -288,7 +291,7 @@ export default function RequestDetailPage() {
     setInvoiceError('');
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/invoices/from-service-request/${params.id}`, {
+      const response = await fetch(`${API_URL}/invoices/from-service-request/${params.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -317,7 +320,7 @@ export default function RequestDetailPage() {
     setIsUpdating(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/service-requests/${params.id}`, {
+      const response = await fetch(`${API_URL}/service-requests/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -346,7 +349,7 @@ export default function RequestDetailPage() {
       const token = localStorage.getItem('accessToken');
       // Fetch employees, optionally filter by zone
       const zoneParam = request?.zone?.id ? `&zoneId=${request.zone.id}` : '';
-      const response = await fetch(`http://localhost:4001/api/v1/employees?isActive=true&limit=100${zoneParam}`, {
+      const response = await fetch(`${API_URL}/employees?isActive=true&limit=100${zoneParam}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -380,7 +383,7 @@ export default function RequestDetailPage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/service-requests/${params.id}/assign`, {
+      const response = await fetch(`${API_URL}/service-requests/${params.id}/assign`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -432,7 +435,7 @@ export default function RequestDetailPage() {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch(`http://localhost:4001/api/v1/service-requests/${params.id}/attachments`, {
+        const response = await fetch(`${API_URL}/service-requests/${params.id}/attachments`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -499,7 +502,7 @@ export default function RequestDetailPage() {
         try {
           const token = localStorage.getItem('accessToken');
           const response = await fetch(
-            `http://localhost:4001/api/v1/service-requests/${params.id}/attachments/${attachmentId}`,
+            `${API_URL}/service-requests/${params.id}/attachments/${attachmentId}`,
             {
               method: 'DELETE',
               headers: { Authorization: `Bearer ${token}` },
@@ -531,7 +534,7 @@ export default function RequestDetailPage() {
       const token = localStorage.getItem('accessToken');
       const unitId = request?.unit?.id;
       const queryParams = unitId ? `?unitId=${unitId}` : '';
-      const response = await fetch(`http://localhost:4001/api/v1/assets${queryParams}`, {
+      const response = await fetch(`${API_URL}/assets${queryParams}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -553,7 +556,7 @@ export default function RequestDetailPage() {
     setLinkingAsset(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/service-requests/${params.id}/asset`, {
+      const response = await fetch(`${API_URL}/service-requests/${params.id}/asset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -587,7 +590,7 @@ export default function RequestDetailPage() {
         setIsConfirming(true);
         try {
           const token = localStorage.getItem('accessToken');
-          const response = await fetch(`http://localhost:4001/api/v1/service-requests/${params.id}/asset`, {
+          const response = await fetch(`${API_URL}/service-requests/${params.id}/asset`, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -614,7 +617,7 @@ export default function RequestDetailPage() {
   async function fetchAssetTypes() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/asset-types', {
+      const response = await fetch('${API_URL}/asset-types', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -635,7 +638,7 @@ export default function RequestDetailPage() {
     setCreatingAsset(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/assets', {
+      const response = await fetch('${API_URL}/assets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -654,7 +657,7 @@ export default function RequestDetailPage() {
       }
 
       // Link the new asset to the service request
-      const linkResponse = await fetch(`http://localhost:4001/api/v1/service-requests/${params.id}/asset`, {
+      const linkResponse = await fetch(`${API_URL}/service-requests/${params.id}/asset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -685,7 +688,7 @@ export default function RequestDetailPage() {
     setCreatingRoom(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/rooms', {
+      const response = await fetch('${API_URL}/rooms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -732,7 +735,7 @@ export default function RequestDetailPage() {
     setLoadingActionTemplates(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/action-templates?isActive=true&limit=50', {
+      const response = await fetch('${API_URL}/action-templates?isActive=true&limit=50', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -770,7 +773,7 @@ export default function RequestDetailPage() {
     setCompleting(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/service-requests/${params.id}`, {
+      const response = await fetch(`${API_URL}/service-requests/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -811,7 +814,7 @@ export default function RequestDetailPage() {
     setCancelling(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/service-requests/${params.id}`, {
+      const response = await fetch(`${API_URL}/service-requests/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1153,7 +1156,7 @@ export default function RequestDetailPage() {
                         {/* View button - for images and PDFs */}
                         {(attachment.fileType.startsWith('image/') || attachment.fileType.includes('pdf')) && (
                           <a
-                            href={`http://localhost:4001${attachment.filePath}`}
+                            href={`${API_BASE}${attachment.filePath}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-gray-400 hover:text-sky-500 p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -1169,7 +1172,7 @@ export default function RequestDetailPage() {
                         <button
                           onClick={async () => {
                             try {
-                              const response = await fetch(`http://localhost:4001${attachment.filePath}`);
+                              const response = await fetch(`${API_BASE}${attachment.filePath}`);
                               const blob = await response.blob();
                               const url = window.URL.createObjectURL(blob);
                               const a = document.createElement('a');

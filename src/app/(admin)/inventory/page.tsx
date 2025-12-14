@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -88,7 +90,7 @@ export default function InventoryPage() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('accessToken');
-      let url = 'http://localhost:4001/api/v1/inventory-items?limit=100';
+      let url = '${API_URL}/inventory-items?limit=100';
       if (showLowStock) url += '&lowStock=true';
       if (filterCategory) url += `&categoryId=${filterCategory}`;
 
@@ -109,7 +111,7 @@ export default function InventoryPage() {
   async function fetchCategories() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/inventory-categories?isActive=true', {
+      const response = await fetch('${API_URL}/inventory-categories?isActive=true', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -131,8 +133,8 @@ export default function InventoryPage() {
     setSaving(true);
     const token = localStorage.getItem('accessToken');
     const url = editingItem
-      ? `http://localhost:4001/api/v1/inventory-items/${editingItem.id}`
-      : 'http://localhost:4001/api/v1/inventory-items';
+      ? `${API_URL}/inventory-items/${editingItem.id}`
+      : '${API_URL}/inventory-items';
 
     try {
       const payload = {

@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -83,7 +85,7 @@ export default function RolesPage() {
   async function fetchRoles() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/roles', {
+      const response = await fetch('${API_URL}/roles', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -100,7 +102,7 @@ export default function RolesPage() {
   async function fetchPermissions() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/roles/permissions', {
+      const response = await fetch('${API_URL}/roles/permissions', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -117,8 +119,8 @@ export default function RolesPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingRole
-      ? `http://localhost:4001/api/v1/roles/${editingRole.id}`
-      : 'http://localhost:4001/api/v1/roles';
+      ? `${API_URL}/roles/${editingRole.id}`
+      : '${API_URL}/roles';
 
     try {
       const response = await fetch(url, {
@@ -150,7 +152,7 @@ export default function RolesPage() {
 
     const token = localStorage.getItem('accessToken');
     try {
-      const response = await fetch(`http://localhost:4001/api/v1/roles/${editingRole.id}/permissions`, {
+      const response = await fetch(`${API_URL}/roles/${editingRole.id}/permissions`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -178,7 +180,7 @@ export default function RolesPage() {
 
     const token = localStorage.getItem('accessToken');
     try {
-      const response = await fetch(`http://localhost:4001/api/v1/roles/${role.id}`, {
+      const response = await fetch(`${API_URL}/roles/${role.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

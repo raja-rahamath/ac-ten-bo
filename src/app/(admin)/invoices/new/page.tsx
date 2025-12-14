@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui';
@@ -57,8 +59,8 @@ export default function NewInvoicePage() {
 
     try {
       const [customersRes, requestsRes] = await Promise.all([
-        fetch('http://localhost:4001/api/v1/customers?limit=100', { headers }),
-        fetch('http://localhost:4001/api/v1/service-requests?limit=100&status=COMPLETED', { headers }),
+        fetch('${API_URL}/customers?limit=100', { headers }),
+        fetch('${API_URL}/service-requests?limit=100&status=COMPLETED', { headers }),
       ]);
 
       const customersData = await customersRes.json();
@@ -128,7 +130,7 @@ export default function NewInvoicePage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/invoices', {
+      const response = await fetch('${API_URL}/invoices', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

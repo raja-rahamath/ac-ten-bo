@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -56,7 +58,7 @@ export default function InventoryCategoriesPage() {
   async function fetchInventoryCategories() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/inventory-categories', {
+      const response = await fetch('${API_URL}/inventory-categories', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -74,8 +76,8 @@ export default function InventoryCategoriesPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingCategory
-      ? `http://localhost:4001/api/v1/inventory-categories/${editingCategory.id}`
-      : 'http://localhost:4001/api/v1/inventory-categories';
+      ? `${API_URL}/inventory-categories/${editingCategory.id}`
+      : '${API_URL}/inventory-categories';
 
     try {
       const response = await fetch(url, {

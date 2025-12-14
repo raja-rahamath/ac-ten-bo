@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -57,7 +59,7 @@ export default function JobTitlesPage() {
   async function fetchJobTitles() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/job-titles', {
+      const response = await fetch('${API_URL}/job-titles', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -75,8 +77,8 @@ export default function JobTitlesPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingJobTitle
-      ? `http://localhost:4001/api/v1/job-titles/${editingJobTitle.id}`
-      : 'http://localhost:4001/api/v1/job-titles';
+      ? `${API_URL}/job-titles/${editingJobTitle.id}`
+      : '${API_URL}/job-titles';
 
     try {
       const payload = {

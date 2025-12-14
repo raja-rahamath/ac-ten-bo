@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 interface LeaveRequest {
   id: string;
   employeeId: string;
@@ -63,7 +65,7 @@ export default function LeaveCalendar({ zoneId }: LeaveCalendarProps) {
       const startDate = new Date(year, month, 1).toISOString();
       const endDate = new Date(year, month + 1, 0).toISOString();
 
-      let url = `http://localhost:4001/api/v1/leaves/requests?startDate=${startDate}&endDate=${endDate}`;
+      let url = `${API_URL}/leaves/requests?startDate=${startDate}&endDate=${endDate}`;
       if (zoneId) {
         url += `&zoneId=${zoneId}`;
       }

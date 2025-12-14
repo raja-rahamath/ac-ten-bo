@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -67,7 +69,7 @@ export default function SectionsPage() {
   async function fetchDepartments() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/departments', {
+      const response = await fetch('${API_URL}/departments', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -83,8 +85,8 @@ export default function SectionsPage() {
     try {
       const token = localStorage.getItem('accessToken');
       const url = selectedDepartment
-        ? `http://localhost:4001/api/v1/sections?departmentId=${selectedDepartment}`
-        : 'http://localhost:4001/api/v1/sections';
+        ? `${API_URL}/sections?departmentId=${selectedDepartment}`
+        : '${API_URL}/sections';
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -103,8 +105,8 @@ export default function SectionsPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingSection
-      ? `http://localhost:4001/api/v1/sections/${editingSection.id}`
-      : 'http://localhost:4001/api/v1/sections';
+      ? `${API_URL}/sections/${editingSection.id}`
+      : '${API_URL}/sections';
 
     try {
       const response = await fetch(url, {

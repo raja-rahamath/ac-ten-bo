@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -58,7 +60,7 @@ export default function CountriesPage() {
   async function fetchCountries() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/countries', {
+      const response = await fetch('${API_URL}/countries', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -76,8 +78,8 @@ export default function CountriesPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingCountry
-      ? `http://localhost:4001/api/v1/countries/${editingCountry.id}`
-      : 'http://localhost:4001/api/v1/countries';
+      ? `${API_URL}/countries/${editingCountry.id}`
+      : '${API_URL}/countries';
 
     try {
       const response = await fetch(url, {

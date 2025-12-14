@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -66,7 +68,7 @@ export default function GovernoratesPage() {
   async function fetchGovernorates() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/governorates', {
+      const response = await fetch('${API_URL}/governorates', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -83,7 +85,7 @@ export default function GovernoratesPage() {
   async function fetchDistricts() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/districts', {
+      const response = await fetch('${API_URL}/districts', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -99,8 +101,8 @@ export default function GovernoratesPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingGovernorate
-      ? `http://localhost:4001/api/v1/governorates/${editingGovernorate.id}`
-      : 'http://localhost:4001/api/v1/governorates';
+      ? `${API_URL}/governorates/${editingGovernorate.id}`
+      : '${API_URL}/governorates';
 
     try {
       const response = await fetch(url, {

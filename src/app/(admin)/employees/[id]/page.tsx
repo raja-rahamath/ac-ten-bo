@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -68,7 +70,7 @@ export default function EmployeeDetailPage() {
   async function fetchEmployee() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/employees/${params.id}`, {
+      const response = await fetch(`${API_URL}/employees/${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -88,7 +90,7 @@ export default function EmployeeDetailPage() {
     try {
       const token = localStorage.getItem('accessToken');
       // Fetch NEW requests that can be assigned
-      const response = await fetch(`http://localhost:4001/api/v1/service-requests?status=NEW&limit=50`, {
+      const response = await fetch(`${API_URL}/service-requests?status=NEW&limit=50`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -154,7 +156,7 @@ export default function EmployeeDetailPage() {
       const token = localStorage.getItem('accessToken');
       const results = await Promise.allSettled(
         selectedRequestIds.map((requestId) =>
-          fetch(`http://localhost:4001/api/v1/service-requests/${requestId}/assign`, {
+          fetch(`${API_URL}/service-requests/${requestId}/assign`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -173,7 +175,7 @@ export default function EditEstimatePage() {
   const fetchLaborRateTypes = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/labor-rate-types?isActive=true', {
+      const response = await fetch('${API_URL}/labor-rate-types?isActive=true', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -188,7 +190,7 @@ export default function EditEstimatePage() {
   const fetchInventoryItems = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/inventory-items?isActive=true&limit=500', {
+      const response = await fetch('${API_URL}/inventory-items?isActive=true&limit=500', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -203,7 +205,7 @@ export default function EditEstimatePage() {
   const fetchInventoryCategories = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/inventory-categories?isActive=true', {
+      const response = await fetch('${API_URL}/inventory-categories?isActive=true', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -219,7 +221,7 @@ export default function EditEstimatePage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/estimates/${estimateId}`, {
+      const response = await fetch(`${API_URL}/estimates/${estimateId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -347,7 +349,7 @@ export default function EditEstimatePage() {
     setSavingNewItem(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/inventory-items', {
+      const response = await fetch('${API_URL}/inventory-items', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -639,7 +641,7 @@ export default function EditEstimatePage() {
         })),
       };
 
-      const response = await fetch(`http://localhost:4001/api/v1/estimates/${estimateId}`, {
+      const response = await fetch(`${API_URL}/estimates/${estimateId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

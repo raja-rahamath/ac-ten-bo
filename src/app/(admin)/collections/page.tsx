@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -65,7 +67,7 @@ export default function CollectionsPage() {
       if (filter.toDate) params.append('toDate', filter.toDate);
       if (filter.search) params.append('search', filter.search);
 
-      const response = await fetch(`http://localhost:4001/api/v1/collections?${params}`, {
+      const response = await fetch(`${API_URL}/collections?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -88,7 +90,7 @@ export default function CollectionsPage() {
       if (filter.fromDate) params.append('fromDate', filter.fromDate);
       if (filter.toDate) params.append('toDate', filter.toDate);
 
-      const response = await fetch(`http://localhost:4001/api/v1/collections/stats?${params}`, {
+      const response = await fetch(`${API_URL}/collections/stats?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();

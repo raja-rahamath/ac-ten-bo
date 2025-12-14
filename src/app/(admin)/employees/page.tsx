@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 const Icons = {
   search: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,9 +130,9 @@ export default function EmployeesPage() {
 
     try {
       const [deptRes, jobRes, zoneRes] = await Promise.all([
-        fetch('http://localhost:4001/api/v1/departments?limit=100', { headers }),
-        fetch('http://localhost:4001/api/v1/job-titles?limit=100', { headers }),
-        fetch('http://localhost:4001/api/v1/zones?limit=100', { headers }),
+        fetch(`${API_URL}/departments?limit=100`, { headers }),
+        fetch(`${API_URL}/job-titles?limit=100`, { headers }),
+        fetch(`${API_URL}/zones?limit=100`, { headers }),
       ]);
 
       const [deptData, jobData, zoneData] = await Promise.all([
@@ -160,7 +162,7 @@ export default function EmployeesPage() {
       if (zoneId) params.set('zoneId', zoneId);
 
       const response = await fetch(
-        `http://localhost:4001/api/v1/employees?${params.toString()}`,
+        `${API_URL}/employees?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();
@@ -181,7 +183,7 @@ export default function EmployeesPage() {
     setIsExporting(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/employees/export/excel', {
+      const response = await fetch(`${API_URL}/employees/export/excel`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -207,7 +209,7 @@ export default function EmployeesPage() {
   async function handleDownloadTemplate() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/employees/import/template', {
+      const response = await fetch(`${API_URL}/employees/import/template`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -240,7 +242,7 @@ export default function EmployeesPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:4001/api/v1/employees/import/excel', {
+      const response = await fetch(`${API_URL}/employees/import/excel`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

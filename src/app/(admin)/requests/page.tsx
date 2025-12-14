@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -82,7 +84,7 @@ export default function RequestsPage() {
   async function fetchCurrentEmployee() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/employees/me', {
+      const response = await fetch('${API_URL}/employees/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -100,9 +102,9 @@ export default function RequestsPage() {
     try {
       const token = localStorage.getItem('accessToken');
       const [customersRes, employeesRes, typesRes] = await Promise.all([
-        fetch('http://localhost:4001/api/v1/customers?limit=100', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:4001/api/v1/employees?isActive=true&limit=100', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:4001/api/v1/complaint-types', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/customers?limit=100', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/employees?isActive=true&limit=100', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/complaint-types', { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
       const [customersData, employeesData, typesData] = await Promise.all([
@@ -142,7 +144,7 @@ export default function RequestsPage() {
       }
 
       const response = await fetch(
-        `http://localhost:4001/api/v1/service-requests?${params.toString()}`,
+        `${API_URL}/service-requests?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();

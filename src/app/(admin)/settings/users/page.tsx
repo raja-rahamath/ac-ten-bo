@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -98,7 +100,7 @@ export default function UsersPage() {
   async function fetchRoles() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/roles', {
+      const response = await fetch('${API_URL}/roles', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -114,7 +116,7 @@ export default function UsersPage() {
     try {
       const token = localStorage.getItem('accessToken');
       const queryParams = selectedRoleFilter ? `?roleId=${selectedRoleFilter}` : '';
-      const response = await fetch(`http://localhost:4001/api/v1/users${queryParams}`, {
+      const response = await fetch(`${API_URL}/users${queryParams}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -132,8 +134,8 @@ export default function UsersPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingUser
-      ? `http://localhost:4001/api/v1/users/${editingUser.id}`
-      : 'http://localhost:4001/api/v1/users';
+      ? `${API_URL}/users/${editingUser.id}`
+      : '${API_URL}/users';
 
     const submitData = { ...formData };
     if (editingUser && !submitData.password) {

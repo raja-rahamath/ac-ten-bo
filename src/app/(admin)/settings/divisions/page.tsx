@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -71,7 +73,7 @@ export default function DivisionsPage() {
   async function fetchCompanies() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/companies', {
+      const response = await fetch('${API_URL}/companies', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -87,7 +89,7 @@ export default function DivisionsPage() {
     try {
       const token = localStorage.getItem('accessToken');
       const queryParams = selectedCompanyFilter ? `?companyId=${selectedCompanyFilter}` : '';
-      const response = await fetch(`http://localhost:4001/api/v1/divisions${queryParams}`, {
+      const response = await fetch(`${API_URL}/divisions${queryParams}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -105,8 +107,8 @@ export default function DivisionsPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingDivision
-      ? `http://localhost:4001/api/v1/divisions/${editingDivision.id}`
-      : 'http://localhost:4001/api/v1/divisions';
+      ? `${API_URL}/divisions/${editingDivision.id}`
+      : '${API_URL}/divisions';
 
     try {
       const response = await fetch(url, {

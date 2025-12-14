@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -61,9 +63,9 @@ export default function ReportsPage() {
 
     try {
       const [dashboardRes, srRes, revenueRes] = await Promise.all([
-        fetch(`http://localhost:4001/api/v1/reports/dashboard?period=${period}`, { headers }),
-        fetch(`http://localhost:4001/api/v1/reports/service-requests?period=${period}`, { headers }),
-        fetch(`http://localhost:4001/api/v1/reports/revenue?period=${period}`, { headers }),
+        fetch(`${API_URL}/reports/dashboard?period=${period}`, { headers }),
+        fetch(`${API_URL}/reports/service-requests?period=${period}`, { headers }),
+        fetch(`${API_URL}/reports/revenue?period=${period}`, { headers }),
       ]);
 
       const [dashboardJson, srJson, revenueJson] = await Promise.all([

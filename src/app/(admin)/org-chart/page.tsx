@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 
@@ -125,8 +127,8 @@ export default function OrgChartPage() {
       const headers = { Authorization: `Bearer ${token}` };
 
       const [empRes, deptRes] = await Promise.all([
-        fetch('http://localhost:4001/api/v1/employees?limit=500', { headers }),
-        fetch('http://localhost:4001/api/v1/departments?limit=100', { headers }),
+        fetch('${API_URL}/employees?limit=500', { headers }),
+        fetch('${API_URL}/departments?limit=100', { headers }),
       ]);
 
       const [empData, deptData] = await Promise.all([empRes.json(), deptRes.json()]);

@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -64,7 +66,7 @@ export default function CustomerDetailPage() {
     const token = localStorage.getItem('accessToken');
     try {
       const res = await fetch(
-        `http://localhost:4001/api/v1/buildings/properties?building=${encodeURIComponent(query)}&limit=20`,
+        `${API_URL}/buildings/properties?building=${encodeURIComponent(query)}&limit=20`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
@@ -103,7 +105,7 @@ export default function CustomerDetailPage() {
     setLinkingUnit(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`http://localhost:4001/api/v1/customers/${params.id}/units`, {
+      const res = await fetch(`${API_URL}/customers/${params.id}/units`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +140,7 @@ export default function CustomerDetailPage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`http://localhost:4001/api/v1/customers/${params.id}/units/${unitId}`, {
+      const res = await fetch(`${API_URL}/customers/${params.id}/units/${unitId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -158,7 +160,7 @@ export default function CustomerDetailPage() {
   async function fetchCustomer() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/customers/${params.id}`, {
+      const response = await fetch(`${API_URL}/customers/${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();

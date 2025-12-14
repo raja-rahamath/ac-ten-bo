@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui';
@@ -184,7 +186,7 @@ export default function EditEmployeePage() {
 
   async function fetchEmployee() {
     try {
-      const response = await fetchWithAuth(`http://localhost:4001/api/v1/employees/${params.id}`);
+      const response = await fetchWithAuth(`${API_URL}/employees/${params.id}`);
       const data = await response.json();
 
       if (data.success) {
@@ -243,7 +245,7 @@ export default function EditEmployeePage() {
 
   async function fetchCompanies() {
     try {
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/companies');
+      const response = await fetchWithAuth('${API_URL}/companies');
       const data = await response.json();
       if (data.success) {
         setCompanies(data.data);
@@ -255,7 +257,7 @@ export default function EditEmployeePage() {
 
   async function fetchDivisions(companyId: string) {
     try {
-      const response = await fetchWithAuth(`http://localhost:4001/api/v1/divisions?companyId=${companyId}`);
+      const response = await fetchWithAuth(`${API_URL}/divisions?companyId=${companyId}`);
       const data = await response.json();
       if (data.success) {
         setDivisions(data.data);
@@ -267,7 +269,7 @@ export default function EditEmployeePage() {
 
   async function fetchDepartments(divisionId: string) {
     try {
-      const response = await fetchWithAuth(`http://localhost:4001/api/v1/departments?divisionId=${divisionId}`);
+      const response = await fetchWithAuth(`${API_URL}/departments?divisionId=${divisionId}`);
       const data = await response.json();
       if (data.success) {
         setDepartments(data.data);
@@ -279,7 +281,7 @@ export default function EditEmployeePage() {
 
   async function fetchJobTitles() {
     try {
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/job-titles');
+      const response = await fetchWithAuth('${API_URL}/job-titles');
       const data = await response.json();
       if (data.success) {
         setJobTitles(data.data);
@@ -291,7 +293,7 @@ export default function EditEmployeePage() {
 
   async function fetchZones() {
     try {
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/zones');
+      const response = await fetchWithAuth('${API_URL}/zones');
       const data = await response.json();
       if (data.success) {
         setZones(data.data);
@@ -320,7 +322,7 @@ export default function EditEmployeePage() {
 
   async function fetchManagers() {
     try {
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/employees?isActive=true&limit=500');
+      const response = await fetchWithAuth('${API_URL}/employees?isActive=true&limit=500');
       const data = await response.json();
       if (data.success) {
         // Filter out current employee and junior-level employees from managers list
@@ -336,7 +338,7 @@ export default function EditEmployeePage() {
 
   async function fetchRoles() {
     try {
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/roles');
+      const response = await fetchWithAuth('${API_URL}/roles');
       const data = await response.json();
       if (data.success) {
         setRoles(data.data);
@@ -396,7 +398,7 @@ export default function EditEmployeePage() {
       const hireDateISO = hireDate ? new Date(hireDate).toISOString() : undefined;
       const dateOfBirthISO = dateOfBirth ? new Date(dateOfBirth).toISOString() : undefined;
 
-      const response = await fetchWithAuth(`http://localhost:4001/api/v1/employees/${params.id}`, {
+      const response = await fetchWithAuth(`${API_URL}/employees/${params.id}`, {
         method: 'PUT',
         body: JSON.stringify({
           firstName,

@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -88,10 +90,10 @@ export default function PropertyTypesPage() {
     try {
       const token = localStorage.getItem('accessToken');
       const [treeRes, allRes] = await Promise.all([
-        fetch('http://localhost:4001/api/v1/property-types?rootOnly=true', {
+        fetch('${API_URL}/property-types?rootOnly=true', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:4001/api/v1/property-types', {
+        fetch('${API_URL}/property-types', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -127,8 +129,8 @@ export default function PropertyTypesPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingType
-      ? `http://localhost:4001/api/v1/property-types/${editingType.id}`
-      : 'http://localhost:4001/api/v1/property-types';
+      ? `${API_URL}/property-types/${editingType.id}`
+      : '${API_URL}/property-types';
 
     try {
       const payload = {

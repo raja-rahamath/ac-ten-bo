@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -90,7 +92,7 @@ export default function QuotesPage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/quotes/stats', {
+      const response = await fetch('${API_URL}/quotes/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -122,7 +124,7 @@ export default function QuotesPage() {
       else if (statusFilter) params.append('status', statusFilter);
 
       const response = await fetch(
-        `http://localhost:4001/api/v1/quotes?${params}`,
+        `${API_URL}/quotes?${params}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

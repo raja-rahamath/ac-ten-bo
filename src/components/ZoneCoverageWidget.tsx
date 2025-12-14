@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 interface ZoneCoverage {
   zoneId: string;
   zoneName: string;
@@ -87,7 +89,7 @@ export default function ZoneCoverageWidget() {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:4001/api/v1/zones/coverage?date=${selectedDate}`,
+        `${API_URL}/zones/coverage?date=${selectedDate}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

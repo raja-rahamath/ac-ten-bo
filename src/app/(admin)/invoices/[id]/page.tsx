@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -85,7 +87,7 @@ export default function InvoiceDetailPage() {
   async function fetchInvoice() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/invoices/${params.id}`, {
+      const response = await fetch(`${API_URL}/invoices/${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -108,7 +110,7 @@ export default function InvoiceDetailPage() {
     setIsUpdating(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/invoices/${params.id}`, {
+      const response = await fetch(`${API_URL}/invoices/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -133,7 +135,7 @@ export default function InvoiceDetailPage() {
     setIsUpdating(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/invoices/${params.id}/payments`, {
+      const response = await fetch(`${API_URL}/invoices/${params.id}/payments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -215,7 +217,7 @@ export default function InvoiceDetailPage() {
     setItemError('');
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/invoices/${params.id}`, {
+      const response = await fetch(`${API_URL}/invoices/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

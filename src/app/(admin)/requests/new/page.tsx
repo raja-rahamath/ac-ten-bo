@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -132,7 +134,7 @@ export default function NewRequestPage() {
     setLoadingAreas(true);
     const token = localStorage.getItem('accessToken');
     try {
-      const res = await fetch(`http://localhost:4001/api/v1/areas?governorateId=${governorateId}&limit=1000`, {
+      const res = await fetch(`${API_URL}/areas?governorateId=${governorateId}&limit=1000`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -149,7 +151,7 @@ export default function NewRequestPage() {
   async function fetchCustomerById(id: string) {
     const token = localStorage.getItem('accessToken');
     try {
-      const res = await fetch(`http://localhost:4001/api/v1/customers/${id}`, {
+      const res = await fetch(`${API_URL}/customers/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -172,8 +174,8 @@ export default function NewRequestPage() {
 
     try {
       const [typesRes, governoratesRes] = await Promise.all([
-        fetch('http://localhost:4001/api/v1/complaint-types', { headers }).catch(() => null),
-        fetch('http://localhost:4001/api/v1/governorates?limit=100', { headers }).catch(() => null),
+        fetch('${API_URL}/complaint-types', { headers }).catch(() => null),
+        fetch('${API_URL}/governorates?limit=100', { headers }).catch(() => null),
       ]);
 
       if (typesRes) {
@@ -198,7 +200,7 @@ export default function NewRequestPage() {
     setLoadingRooms(true);
     const token = localStorage.getItem('accessToken');
     try {
-      const res = await fetch(`http://localhost:4001/api/v1/rooms?unitId=${unitId}&limit=100`, {
+      const res = await fetch(`${API_URL}/rooms?unitId=${unitId}&limit=100`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -216,7 +218,7 @@ export default function NewRequestPage() {
     setLoadingAssets(true);
     const token = localStorage.getItem('accessToken');
     try {
-      let url = `http://localhost:4001/api/v1/assets?unitId=${unitId}&limit=100`;
+      let url = `${API_URL}/assets?unitId=${unitId}&limit=100`;
       if (selectedRoomId) {
         url += `&roomId=${selectedRoomId}`;
       }
@@ -238,7 +240,7 @@ export default function NewRequestPage() {
     const token = localStorage.getItem('accessToken');
     try {
       const res = await fetch(
-        `http://localhost:4001/api/v1/customers?search=${encodeURIComponent(query)}&limit=20`,
+        `${API_URL}/customers?search=${encodeURIComponent(query)}&limit=20`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
@@ -259,7 +261,7 @@ export default function NewRequestPage() {
     const token = localStorage.getItem('accessToken');
     try {
       const res = await fetch(
-        `http://localhost:4001/api/v1/buildings/properties?building=${encodeURIComponent(query)}&limit=20`,
+        `${API_URL}/buildings/properties?building=${encodeURIComponent(query)}&limit=20`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
@@ -294,7 +296,7 @@ export default function NewRequestPage() {
       const token = localStorage.getItem('accessToken');
       // Combine country code and phone number
       const fullPhone = `${newCustomer.countryCode} ${newCustomer.phone}`;
-      const res = await fetch('http://localhost:4001/api/v1/customers', {
+      const res = await fetch('${API_URL}/customers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -345,7 +347,7 @@ export default function NewRequestPage() {
       };
 
       // First create the building
-      const buildingRes = await fetch('http://localhost:4001/api/v1/buildings', {
+      const buildingRes = await fetch('${API_URL}/buildings', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -369,7 +371,7 @@ export default function NewRequestPage() {
 
       // If flat number provided, create a unit
       if (newProperty.flatNumber) {
-        const unitRes = await fetch('http://localhost:4001/api/v1/units', {
+        const unitRes = await fetch('${API_URL}/units', {
           method: 'POST',
           headers,
           body: JSON.stringify({
@@ -420,7 +422,7 @@ export default function NewRequestPage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/service-requests', {
+      const response = await fetch('${API_URL}/service-requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -22,7 +24,7 @@ export default function NewBuildingTypePage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/building-types', {
+      const response = await fetch('${API_URL}/building-types', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

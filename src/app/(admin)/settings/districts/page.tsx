@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -66,7 +68,7 @@ export default function DistrictsPage() {
   async function fetchDistricts() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/districts', {
+      const response = await fetch('${API_URL}/districts', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -83,7 +85,7 @@ export default function DistrictsPage() {
   async function fetchStates() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/states', {
+      const response = await fetch('${API_URL}/states', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -99,8 +101,8 @@ export default function DistrictsPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingDistrict
-      ? `http://localhost:4001/api/v1/districts/${editingDistrict.id}`
-      : 'http://localhost:4001/api/v1/districts';
+      ? `${API_URL}/districts/${editingDistrict.id}`
+      : '${API_URL}/districts';
 
     try {
       const response = await fetch(url, {

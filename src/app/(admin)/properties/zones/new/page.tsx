@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -32,7 +34,7 @@ export default function NewZonePage() {
   async function fetchGovernorates() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/governorates?limit=100', {
+      const response = await fetch('${API_URL}/governorates?limit=100', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -51,7 +53,7 @@ export default function NewZonePage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/zones', {
+      const response = await fetch('${API_URL}/zones', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui';
@@ -146,7 +148,7 @@ export default function NewEmployeePage() {
 
   async function fetchCompanies() {
     try {
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/companies');
+      const response = await fetchWithAuth('${API_URL}/companies');
       const data = await response.json();
       if (data.success) {
         setCompanies(data.data);
@@ -158,7 +160,7 @@ export default function NewEmployeePage() {
 
   async function fetchDivisions(companyId: string) {
     try {
-      const response = await fetchWithAuth(`http://localhost:4001/api/v1/divisions?companyId=${companyId}`);
+      const response = await fetchWithAuth(`${API_URL}/divisions?companyId=${companyId}`);
       const data = await response.json();
       if (data.success) {
         setDivisions(data.data);
@@ -170,7 +172,7 @@ export default function NewEmployeePage() {
 
   async function fetchDepartments(divisionId: string) {
     try {
-      const response = await fetchWithAuth(`http://localhost:4001/api/v1/departments?divisionId=${divisionId}`);
+      const response = await fetchWithAuth(`${API_URL}/departments?divisionId=${divisionId}`);
       const data = await response.json();
       if (data.success) {
         setDepartments(data.data);
@@ -182,7 +184,7 @@ export default function NewEmployeePage() {
 
   async function fetchJobTitles() {
     try {
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/job-titles');
+      const response = await fetchWithAuth('${API_URL}/job-titles');
       const data = await response.json();
       if (data.success) {
         setJobTitles(data.data);
@@ -194,7 +196,7 @@ export default function NewEmployeePage() {
 
   async function fetchZones() {
     try {
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/zones');
+      const response = await fetchWithAuth('${API_URL}/zones');
       const data = await response.json();
       if (data.success) {
         setZones(data.data);
@@ -206,7 +208,7 @@ export default function NewEmployeePage() {
 
   async function fetchRoles() {
     try {
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/roles');
+      const response = await fetchWithAuth('${API_URL}/roles');
       const data = await response.json();
       if (data.success) {
         setRoles(data.data);
@@ -236,7 +238,7 @@ export default function NewEmployeePage() {
   async function fetchManagers() {
     try {
       // Fetch all active employees as potential managers
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/employees?isActive=true&limit=500');
+      const response = await fetchWithAuth('${API_URL}/employees?isActive=true&limit=500');
       const data = await response.json();
       if (data.success) {
         // Filter out junior-level employees from managers list
@@ -315,7 +317,7 @@ export default function NewEmployeePage() {
       const hireDateValue = formData.get('hireDate') as string;
       const hireDateISO = hireDateValue ? new Date(hireDateValue).toISOString() : undefined;
 
-      const response = await fetchWithAuth('http://localhost:4001/api/v1/employees', {
+      const response = await fetchWithAuth('${API_URL}/employees', {
         method: 'POST',
         body: JSON.stringify({
           firstName: firstName,

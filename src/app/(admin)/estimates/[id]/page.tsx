@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -205,7 +207,7 @@ export default function EstimateDetailPage() {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:4001/api/v1/estimates/${params.id}`,
+        `${API_URL}/estimates/${params.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -236,7 +238,7 @@ export default function EstimateDetailPage() {
       setActionLoading(true);
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:4001/api/v1/estimates/${params.id}/${action}`,
+        `${API_URL}/estimates/${params.id}/${action}`,
         {
           method: 'POST',
           headers: {
@@ -272,7 +274,7 @@ export default function EstimateDetailPage() {
       setActionLoading(true);
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:4001/api/v1/estimates/${params.id}/create-revision`,
+        `${API_URL}/estimates/${params.id}/create-revision`,
         {
           method: 'POST',
           headers: {

@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -44,7 +46,7 @@ export default function InvoicesPage() {
       const statusParam = filter !== 'ALL' ? `&status=${filter}` : '';
       const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
       const response = await fetch(
-        `http://localhost:4001/api/v1/invoices?page=${page}&limit=20${statusParam}${searchParam}`,
+        `${API_URL}/invoices?page=${page}&limit=20${statusParam}${searchParam}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();
@@ -63,7 +65,7 @@ export default function InvoicesPage() {
   async function fetchStats() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/invoices/stats', {
+      const response = await fetch('${API_URL}/invoices/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();

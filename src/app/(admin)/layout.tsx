@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -282,7 +284,7 @@ export default function AdminLayout({
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/users/change-password', {
+      const response = await fetch('${API_URL}/users/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -79,7 +81,7 @@ export default function EditZonePage() {
   async function fetchGovernorates() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/governorates?limit=100', {
+      const response = await fetch('${API_URL}/governorates?limit=100', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -94,7 +96,7 @@ export default function EditZonePage() {
   async function fetchEmployees() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/employees?limit=500&isActive=true', {
+      const response = await fetch('${API_URL}/employees?limit=500&isActive=true', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -109,7 +111,7 @@ export default function EditZonePage() {
   async function fetchZone() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/zones/${params.id}`, {
+      const response = await fetch(`${API_URL}/zones/${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -134,7 +136,7 @@ export default function EditZonePage() {
   async function fetchTeam() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/zones/${params.id}/team`, {
+      const response = await fetch(`${API_URL}/zones/${params.id}/team`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -153,7 +155,7 @@ export default function EditZonePage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/zones/${params.id}`, {
+      const response = await fetch(`${API_URL}/zones/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +191,7 @@ export default function EditZonePage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/zones/${params.id}/team`, {
+      const response = await fetch(`${API_URL}/zones/${params.id}/team`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -223,7 +225,7 @@ export default function EditZonePage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/zones/${params.id}/team/${employeeId}`, {
+      const response = await fetch(`${API_URL}/zones/${params.id}/team/${employeeId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -245,7 +247,7 @@ export default function EditZonePage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/zones/${params.id}/heads`, {
+      const response = await fetch(`${API_URL}/zones/${params.id}/heads`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

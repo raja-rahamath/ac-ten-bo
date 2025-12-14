@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MenuItem, Role } from '@/types';
@@ -32,12 +34,12 @@ export default function RoleMenusPage() {
       const token = localStorage.getItem('accessToken');
 
       // Fetch all roles with their menu assignments
-      const rolesRes = await fetch('http://localhost:4001/api/v1/menus/roles', {
+      const rolesRes = await fetch('${API_URL}/menus/roles', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       // Fetch all menu items
-      const menusRes = await fetch('http://localhost:4001/api/v1/menus/items?includeInactive=true', {
+      const menusRes = await fetch('${API_URL}/menus/items?includeInactive=true', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -79,7 +81,7 @@ export default function RoleMenusPage() {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:4001/api/v1/menus/roles/${selectedRole.id}`,
+        `${API_URL}/menus/roles/${selectedRole.id}`,
         {
           method: 'PUT',
           headers: {

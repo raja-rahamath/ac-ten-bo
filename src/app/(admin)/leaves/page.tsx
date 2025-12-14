@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import LeaveCalendar from '@/components/LeaveCalendar';
@@ -94,7 +96,7 @@ export default function LeavesPage() {
   async function fetchLeaveTypes() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/leaves/types', {
+      const response = await fetch('${API_URL}/leaves/types', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -109,7 +111,7 @@ export default function LeavesPage() {
   async function fetchEmployees() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/employees?limit=500&isActive=true', {
+      const response = await fetch('${API_URL}/employees?limit=500&isActive=true', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -133,7 +135,7 @@ export default function LeavesPage() {
       });
       if (statusFilter) params.append('status', statusFilter);
 
-      const response = await fetch(`http://localhost:4001/api/v1/leaves/requests?${params}`, {
+      const response = await fetch(`${API_URL}/leaves/requests?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -153,7 +155,7 @@ export default function LeavesPage() {
     try {
       const token = localStorage.getItem('accessToken');
       const year = new Date().getFullYear();
-      const response = await fetch(`http://localhost:4001/api/v1/leaves/balances/${employeeId}?year=${year}`, {
+      const response = await fetch(`${API_URL}/leaves/balances/${employeeId}?year=${year}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -171,7 +173,7 @@ export default function LeavesPage() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/leaves/requests', {
+      const response = await fetch('${API_URL}/leaves/requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,7 +206,7 @@ export default function LeavesPage() {
     try {
       const token = localStorage.getItem('accessToken');
       // Get current user ID from token - for demo using first admin
-      const response = await fetch(`http://localhost:4001/api/v1/leaves/requests/${requestId}/approve`, {
+      const response = await fetch(`${API_URL}/leaves/requests/${requestId}/approve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +231,7 @@ export default function LeavesPage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/leaves/requests/${requestId}/reject`, {
+      const response = await fetch(`${API_URL}/leaves/requests/${requestId}/reject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

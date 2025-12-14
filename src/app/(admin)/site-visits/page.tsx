@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -54,7 +56,7 @@ export default function SiteVisitsPage() {
       const statusParam = filter !== 'ALL' ? `&status=${filter}` : '';
       const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
       const response = await fetch(
-        `http://localhost:4001/api/v1/site-visits?page=${page}&limit=20${statusParam}${searchParam}`,
+        `${API_URL}/site-visits?page=${page}&limit=20${statusParam}${searchParam}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();

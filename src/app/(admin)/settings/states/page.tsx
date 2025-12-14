@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -71,7 +73,7 @@ export default function StatesPage() {
   async function fetchCountries() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/countries', {
+      const response = await fetch('${API_URL}/countries', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -87,8 +89,8 @@ export default function StatesPage() {
     try {
       const token = localStorage.getItem('accessToken');
       const url = selectedCountryFilter
-        ? `http://localhost:4001/api/v1/states?countryId=${selectedCountryFilter}`
-        : 'http://localhost:4001/api/v1/states';
+        ? `${API_URL}/states?countryId=${selectedCountryFilter}`
+        : '${API_URL}/states';
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -108,8 +110,8 @@ export default function StatesPage() {
     e.preventDefault();
     const token = localStorage.getItem('accessToken');
     const url = editingState
-      ? `http://localhost:4001/api/v1/states/${editingState.id}`
-      : 'http://localhost:4001/api/v1/states';
+      ? `${API_URL}/states/${editingState.id}`
+      : '${API_URL}/states';
 
     try {
       const response = await fetch(url, {

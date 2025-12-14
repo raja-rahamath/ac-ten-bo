@@ -1,5 +1,7 @@
 'use client';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -94,7 +96,7 @@ export default function SiteVisitDetailPage() {
   async function fetchVisit() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/site-visits/${params.id}`, {
+      const response = await fetch(`${API_URL}/site-visits/${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -113,7 +115,7 @@ export default function SiteVisitDetailPage() {
     setIsUpdating(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/site-visits/${params.id}/start`, {
+      const response = await fetch(`${API_URL}/site-visits/${params.id}/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +140,7 @@ export default function SiteVisitDetailPage() {
     setIsUpdating(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/site-visits/${params.id}/awaiting-parts`, {
+      const response = await fetch(`${API_URL}/site-visits/${params.id}/awaiting-parts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,7 +170,7 @@ export default function SiteVisitDetailPage() {
     setIsUpdating(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/site-visits/${params.id}/resume`, {
+      const response = await fetch(`${API_URL}/site-visits/${params.id}/resume`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -191,7 +193,7 @@ export default function SiteVisitDetailPage() {
     setIsUpdating(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/site-visits/${params.id}/complete`, {
+      const response = await fetch(`${API_URL}/site-visits/${params.id}/complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -223,7 +225,7 @@ export default function SiteVisitDetailPage() {
     setIsUpdating(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:4001/api/v1/site-visits/${params.id}/materials`, {
+      const response = await fetch(`${API_URL}/site-visits/${params.id}/materials`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +257,7 @@ export default function SiteVisitDetailPage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      await fetch(`http://localhost:4001/api/v1/site-visits/materials/${materialId}`, {
+      await fetch(`${API_URL}/site-visits/materials/${materialId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
