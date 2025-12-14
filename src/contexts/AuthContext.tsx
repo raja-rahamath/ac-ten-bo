@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { useRouter } from 'next/navigation';
 import type { User, MenuItem, UserZone } from '@/types';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 interface CompanyInfo {
   id: string;
   name: string;
@@ -93,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      const response = await fetch('http://localhost:4001/api/v1/menus/me', {
+      const response = await fetch(`${API_URL}/menus/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -115,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      const response = await fetch('http://localhost:4001/api/v1/menus/me/zones', {
+      const response = await fetch(`${API_URL}/menus/me/zones`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -138,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      const response = await fetch('http://localhost:4001/api/v1/companies/primary', {
+      const response = await fetch(`${API_URL}/companies/primary`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -173,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      const response = await fetch('http://localhost:4001/api/v1/onboarding/status', {
+      const response = await fetch(`${API_URL}/onboarding/status`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
