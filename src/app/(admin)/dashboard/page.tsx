@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import OnboardingBanner from '../onboarding/components/OnboardingBanner';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1';
+
 // Modern SVG Icons
 const Icons = {
   clipboard: (
@@ -123,7 +125,7 @@ export default function DashboardPage() {
   async function fetchCurrentEmployee() {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:4001/api/v1/employees/me', {
+      const response = await fetch(`${API_URL}/employees/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -139,7 +141,7 @@ export default function DashboardPage() {
   async function fetchAllowedWidgets() {
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch('http://localhost:4001/api/v1/menus/me/dashboard-widgets', {
+      const res = await fetch(`${API_URL}/menus/me/dashboard-widgets`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -158,8 +160,8 @@ export default function DashboardPage() {
 
       // For technicians, only fetch their assigned requests
       const requestsUrl = isTechnician && currentEmployeeId
-        ? `http://localhost:4001/api/v1/service-requests?limit=100&assignedEmployeeId=${currentEmployeeId}`
-        : 'http://localhost:4001/api/v1/service-requests?limit=10';
+        ? `${API_URL}/service-requests?limit=100&assignedEmployeeId=${currentEmployeeId}`
+        : `${API_URL}/service-requests?limit=10`;
 
       // Technicians don't need customers, employees, or invoices data
       if (isTechnician) {
@@ -184,9 +186,9 @@ export default function DashboardPage() {
         // Full dashboard for non-technicians
         const [requestsRes, customersRes, employeesRes, invoicesRes] = await Promise.all([
           fetch(requestsUrl, { headers }),
-          fetch('http://localhost:4001/api/v1/customers?limit=1', { headers }),
-          fetch('http://localhost:4001/api/v1/employees?limit=1', { headers }),
-          fetch('http://localhost:4001/api/v1/invoices?limit=1', { headers }),
+          fetch(`${API_URL}/customers?limit=1`, { headers }),
+          fetch(`${API_URL}/employees?limit=1`, { headers }),
+          fetch(`${API_URL}/invoices?limit=1`, { headers }),
         ]);
 
         const [requestsData, customersData, employeesData, invoicesData] = await Promise.all([
