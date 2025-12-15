@@ -148,7 +148,7 @@ export default function NewEmployeePage() {
 
   async function fetchCompanies() {
     try {
-      const response = await fetchWithAuth('${API_URL}/companies');
+      const response = await fetchWithAuth(`${API_URL}/companies`);
       const data = await response.json();
       if (data.success) {
         setCompanies(data.data);
@@ -184,7 +184,7 @@ export default function NewEmployeePage() {
 
   async function fetchJobTitles() {
     try {
-      const response = await fetchWithAuth('${API_URL}/job-titles');
+      const response = await fetchWithAuth(`${API_URL}/job-titles`);
       const data = await response.json();
       if (data.success) {
         setJobTitles(data.data);
@@ -196,7 +196,7 @@ export default function NewEmployeePage() {
 
   async function fetchZones() {
     try {
-      const response = await fetchWithAuth('${API_URL}/zones');
+      const response = await fetchWithAuth(`${API_URL}/zones`);
       const data = await response.json();
       if (data.success) {
         setZones(data.data);
@@ -208,7 +208,7 @@ export default function NewEmployeePage() {
 
   async function fetchRoles() {
     try {
-      const response = await fetchWithAuth('${API_URL}/roles');
+      const response = await fetchWithAuth(`${API_URL}/roles`);
       const data = await response.json();
       if (data.success) {
         setRoles(data.data);
@@ -238,7 +238,7 @@ export default function NewEmployeePage() {
   async function fetchManagers() {
     try {
       // Fetch all active employees as potential managers
-      const response = await fetchWithAuth('${API_URL}/employees?isActive=true&limit=500');
+      const response = await fetchWithAuth(`${API_URL}/employees?isActive=true&limit=500`);
       const data = await response.json();
       if (data.success) {
         // Filter out junior-level employees from managers list
@@ -317,7 +317,7 @@ export default function NewEmployeePage() {
       const hireDateValue = formData.get('hireDate') as string;
       const hireDateISO = hireDateValue ? new Date(hireDateValue).toISOString() : undefined;
 
-      const response = await fetchWithAuth('${API_URL}/employees', {
+      const response = await fetchWithAuth(`${API_URL}/employees`, {
         method: 'POST',
         body: JSON.stringify({
           firstName: firstName,

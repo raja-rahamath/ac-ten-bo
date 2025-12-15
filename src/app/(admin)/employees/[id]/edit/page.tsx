@@ -245,7 +245,7 @@ export default function EditEmployeePage() {
 
   async function fetchCompanies() {
     try {
-      const response = await fetchWithAuth('${API_URL}/companies');
+      const response = await fetchWithAuth(`${API_URL}/companies`);
       const data = await response.json();
       if (data.success) {
         setCompanies(data.data);
@@ -281,7 +281,7 @@ export default function EditEmployeePage() {
 
   async function fetchJobTitles() {
     try {
-      const response = await fetchWithAuth('${API_URL}/job-titles');
+      const response = await fetchWithAuth(`${API_URL}/job-titles`);
       const data = await response.json();
       if (data.success) {
         setJobTitles(data.data);
@@ -293,7 +293,7 @@ export default function EditEmployeePage() {
 
   async function fetchZones() {
     try {
-      const response = await fetchWithAuth('${API_URL}/zones');
+      const response = await fetchWithAuth(`${API_URL}/zones`);
       const data = await response.json();
       if (data.success) {
         setZones(data.data);
@@ -322,7 +322,7 @@ export default function EditEmployeePage() {
 
   async function fetchManagers() {
     try {
-      const response = await fetchWithAuth('${API_URL}/employees?isActive=true&limit=500');
+      const response = await fetchWithAuth(`${API_URL}/employees?isActive=true&limit=500`);
       const data = await response.json();
       if (data.success) {
         // Filter out current employee and junior-level employees from managers list
@@ -338,7 +338,7 @@ export default function EditEmployeePage() {
 
   async function fetchRoles() {
     try {
-      const response = await fetchWithAuth('${API_URL}/roles');
+      const response = await fetchWithAuth(`${API_URL}/roles`);
       const data = await response.json();
       if (data.success) {
         setRoles(data.data);
