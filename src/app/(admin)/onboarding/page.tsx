@@ -125,7 +125,8 @@ const STEP_ICONS: Record<string, JSX.Element> = {
   review: Icons.clipboardCheck,
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+// API_BASE should NOT include /api/v1 since we add it in fetch calls
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1$/, '') || 'http://localhost:4001';
 
 export default function OnboardingPage() {
   const router = useRouter();
