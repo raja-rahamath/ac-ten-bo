@@ -229,6 +229,13 @@ export default function RequestDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [cancellationReason, setCancellationReason] = useState('');
 
+  // Edit Service Type state
+  const [showEditTypeModal, setShowEditTypeModal] = useState(false);
+  const [serviceTypes, setServiceTypes] = useState<{ id: string; name: string }[]>([]);
+  const [loadingServiceTypes, setLoadingServiceTypes] = useState(false);
+  const [selectedTypeId, setSelectedTypeId] = useState('');
+  const [updatingType, setUpdatingType] = useState(false);
+
   useEffect(() => {
     fetchRequest();
     fetchEstimates();
@@ -878,6 +885,62 @@ export default function RequestDetailPage() {
     }
   }
 
+  async function fetchServiceTypes() {
+    setLoadingServiceTypes(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${API_URL}/complaint-types?isActive=true`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setServiceTypes(data.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch service types:', error);
+    } finally {
+      setLoadingServiceTypes(false);
+    }
+  }
+
+  function openEditTypeModal() {
+    setSelectedTypeId(request?.complaintType?.id || '');
+    setShowEditTypeModal(true);
+    fetchServiceTypes();
+  }
+
+  async function handleUpdateServiceType() {
+    if (!selectedTypeId || selectedTypeId === request?.complaintType?.id) {
+      setShowEditTypeModal(false);
+      return;
+    }
+
+    setUpdatingType(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${API_URL}/service-requests/${params.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ complaintTypeId: selectedTypeId }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchRequest();
+        setShowEditTypeModal(false);
+      } else {
+        console.error('Failed to update service type:', data.error);
+      }
+    } catch (error) {
+      console.error('Failed to update service type:', error);
+    } finally {
+      setUpdatingType(false);
+    }
+  }
+
   // Filter assets based on search query
   const filteredAssets = assets.filter((asset) => {
     if (!assetSearchQuery) return true;
@@ -1084,7 +1147,16 @@ export default function RequestDetailPage() {
                   <p>{request.source}</p>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-500">Type</label>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-500">Type</label>
+                    <button
+                      onClick={openEditTypeModal}
+                      className="text-xs text-primary hover:text-primary/80 underline"
+                      title="Edit service type"
+                    >
+                      Edit
+                    </button>
+                  </div>
                   <p>{request.complaintType?.name || '-'}</p>
                 </div>
                 <div>
@@ -2361,6 +2433,81 @@ export default function RequestDetailPage() {
                 disabled={!cancellationReason.trim() || cancelling}
               >
                 {cancelling ? 'Cancelling...' : 'Cancel Request'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Service Type Modal */}
+      {showEditTypeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <svg
+                  className="w-6 h-6 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  Edit Service Type
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Select the correct service type for this request
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Service Type
+              </label>
+              {loadingServiceTypes ? (
+                <div className="text-center py-4">Loading...</div>
+              ) : (
+                <select
+                  value={selectedTypeId}
+                  onChange={(e) => setSelectedTypeId(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                >
+                  <option value="">Select a service type</option>
+                  {serviceTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowEditTypeModal(false)}
+                disabled={updatingType}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="flex-1"
+                onClick={handleUpdateServiceType}
+                disabled={!selectedTypeId || updatingType}
+              >
+                {updatingType ? 'Updating...' : 'Update Type'}
               </Button>
             </div>
           </div>
